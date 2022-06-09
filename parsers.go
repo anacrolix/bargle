@@ -60,6 +60,10 @@ func (me Choice[T]) Add(name string, value T) {
 	me.Choices[name] = value
 }
 
+func (me Choice[T]) Get(key string) T {
+	return me.Choices[key]
+}
+
 type targetElem interface {
 	string | int16
 }
@@ -87,21 +91,21 @@ type unaryOption[T any] struct {
 	Shorts      []rune
 }
 
-func UnaryOption[T any](target UnaryUnmarshaler[T]) unaryOption[T] {
-	return unaryOption[T]{Unmarshaler: target}
+func UnaryOption[T any](target UnaryUnmarshaler[T]) *unaryOption[T] {
+	return &unaryOption[T]{Unmarshaler: target}
 }
 
-func (me unaryOption[T]) AddLong(long string) unaryOption[T] {
+func (me *unaryOption[T]) AddLong(long string) *unaryOption[T] {
 	me.Longs = append(me.Longs, long)
 	return me
 }
 
-func (me unaryOption[T]) AddShort(short rune) unaryOption[T] {
+func (me *unaryOption[T]) AddShort(short rune) *unaryOption[T] {
 	me.Shorts = append(me.Shorts, short)
 	return me
 }
 
-func (me unaryOption[T]) Parse(ctx Context) error {
+func (me *unaryOption[T]) Parse(ctx Context) error {
 	if !me.matchSwitch(ctx) {
 		return noMatch
 	}

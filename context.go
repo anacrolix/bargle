@@ -72,3 +72,14 @@ func (me *context) Unhandled() {
 func (me *context) Fail(err error) {
 	panic(controlError{userError(err)})
 }
+
+func (me *context) ParseUntilDone(ps ...Parser) {
+	for !me.Done() {
+		for _, p := range ps {
+			if me.Match(p) {
+				continue
+			}
+		}
+		me.Unhandled()
+	}
+}

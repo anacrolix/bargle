@@ -51,6 +51,7 @@ func (me *UnaryOption[T]) Parse(ctx Context) error {
 	if !me.matchSwitch(ctx) {
 		return noMatch
 	}
+	me.initUnmarshaler()
 	return me.Unmarshaler.UnaryUnmarshal(ctx.Args().Pop(), &me.Value)
 }
 

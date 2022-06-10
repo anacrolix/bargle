@@ -38,7 +38,11 @@ func (me Subcommand) Parse(ctx Context) error {
 	defer recoverType(func(err controlError) {
 		panic(controlError{fmt.Errorf("%s: %w", cmd, err)})
 	})
-	me.Commands[cmd](ctx)
+	f, ok := me.Commands[cmd]
+	if !ok {
+		return noMatch
+	}
+	f(ctx)
 	return nil
 }
 

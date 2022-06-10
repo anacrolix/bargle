@@ -100,14 +100,16 @@ func (me *context) Fail(err error) {
 }
 
 func (me *context) ParseUntilDone(ps ...Parser) {
-	for !me.Done() {
-		for _, p := range ps {
-			if me.Match(p) {
-				continue
-			}
-		}
-		me.Unhandled()
+start:
+	for me.Done() {
+		return
 	}
+	for _, p := range ps {
+		if me.Match(p) {
+			goto start
+		}
+	}
+	me.Unhandled()
 }
 
 func (me *context) MissingArgument(name string) {

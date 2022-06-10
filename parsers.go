@@ -60,7 +60,7 @@ func (me Choice[T]) Unmarshal(choice string, t *T) error {
 	var ok bool
 	*t, ok = me.Choices[choice]
 	if !ok {
-		return noMatch
+		return controlError{fmt.Errorf("unknown choice: %q", choice)}
 	}
 	return nil
 }
@@ -144,7 +144,11 @@ func (me unaryOption[T]) matchSwitch(ctx Context) bool {
 			return true
 		}
 	}
-	// TODO: Short parsing
+	for _, s := range me.Shorts {
+		if ctx.Match(ShortParser{Short: s, CanUnary: true}) {
+			return true
+		}
+	}
 	return false
 }
 

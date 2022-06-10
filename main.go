@@ -15,9 +15,9 @@ func (me *Main) Defer(f func()) {
 	me.deferred = append(me.deferred, f)
 }
 
-func (me *Main) Run(p Parser) {
+func (me *Main) Run(f ContextFunc) {
 	ctx := NewContext(os.Args[1:])
-	err := ctx.Run(p)
+	err := ctx.Run(f)
 	if err == nil {
 		for _, f := range ctx.actions {
 			err = f()

@@ -24,11 +24,12 @@ func (me *context) Args() Args {
 	return me.args
 }
 
-func (me *context) Run(p Parser) (err error) {
+func (me *context) Run(f ContextFunc) (err error) {
 	defer recoverType(func(ce controlError) {
 		err = ce
 	})
-	return p.Parse(me)
+	f(me)
+	return
 }
 
 func (me *context) Parse(p Parser) {

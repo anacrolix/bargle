@@ -16,7 +16,7 @@ func (me Choice[T]) Help(ph *ParamHelp) {
 	ph.Values = strings.Join(maps.Keys(me.Choices), " | ")
 }
 
-func (me Choice[T]) Unmarshal(choice string, t *T) error {
+func (me Choice[T]) UnaryUnmarshal(choice string, t *T) error {
 	var ok bool
 	*t, ok = me.Choices[choice]
 	if !ok {

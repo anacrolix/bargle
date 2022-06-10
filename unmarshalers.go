@@ -1,22 +1,27 @@
 package bargle
 
 import (
+	"fmt"
 	"strconv"
 )
 
 type UnaryUnmarshaler[T any] interface {
-	Unmarshal(s string, t *T) error
+	UnaryUnmarshal(s string, t *T) error
 	Help(ph *ParamHelp)
 }
 
-type BuiltinUnaryUnmarshaler[T interface {
-	string | int16
-}] struct {
-	Value *T
+type basicBuiltinUnaryUnmarshalTarget interface {
+	string | int16 | uint16
 }
 
-func (me BuiltinUnaryUnmarshaler[T]) Unmarshal(s string) error {
-	switch p := any(me.Value).(type) {
+type builtinUnaryUnmarshalTarget interface {
+	//basicBuiltinUnaryUnmarshalTarget | []basicBuiltinUnaryUnmarshalTarget
+}
+
+type BuiltinUnaryUnmarshaler[T builtinUnaryUnmarshalTarget] struct{}
+
+func (me BuiltinUnaryUnmarshaler[T]) UnaryUnmarshal(s string, t *T) error {
+	switch p := any(t).(type) {
 	case *string:
 		*p = s
 	case *int16:
@@ -27,6 +32,11 @@ func (me BuiltinUnaryUnmarshaler[T]) Unmarshal(s string) error {
 		*p = int16(i64)
 	}
 	panic("unreachable")
+}
+
+func (me BuiltinUnaryUnmarshaler[T]) Help(ph *ParamHelp) {
+	var t T
+	ph.Values = fmt.Sprintf("(%T)", t)
 }
 
 type Unmarshaler[T any] interface {
@@ -53,8 +63,20 @@ func (s Slice[T]) Unmarshal(args Args, slice *[]T) error {
 
 type String struct{}
 
+var _ UnaryUnmarshaler[string] = String{}
+
+func (s2 String) Help(ph *ParamHelp) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (String) Unmarshal(args Args, s *string) error {
 	*s = args.Pop()
+	return nil
+}
+
+func (String) UnaryUnmarshal(arg string, s *string) error {
+	*s = arg
 	return nil
 }
 

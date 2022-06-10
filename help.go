@@ -12,7 +12,7 @@ type Help struct {
 }
 
 func (me *Help) Parse(ctx Context) error {
-	if ctx.Match(LongParser{Long: "help"}) {
+	if ctx.Match(&LongParser{Long: "help"}) {
 		me.Print(os.Stdout)
 		ctx.Success()
 	}

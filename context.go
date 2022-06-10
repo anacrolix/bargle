@@ -54,6 +54,15 @@ func (me *context) Match(p Parser) bool {
 	}
 }
 
+func (me *context) MustParseOne(params ...Parser) {
+	for _, p := range params {
+		if me.Match(p) {
+			return
+		}
+	}
+	me.Unhandled()
+}
+
 func (me *context) Done() bool {
 	return me.args.Len() == 0
 }
@@ -83,4 +92,12 @@ func (me *context) ParseUntilDone(ps ...Parser) {
 		}
 		me.Unhandled()
 	}
+}
+
+func (me *context) MissingArgument(name string) {
+	me.Fail(fmt.Errorf("missing argument: %s", name))
+}
+
+func (me *context) Success() {
+	panic(controlError{success{}})
 }

@@ -19,10 +19,14 @@ func (me *Main) Run(f ContextFunc) {
 	ctx := NewContext(os.Args[1:])
 	err := ctx.Run(f)
 	if err == nil {
-		for _, f := range ctx.actions {
-			err = f()
-			if err != nil {
-				break
+		if ctx.args.Len() > 0 {
+			err = unhandledErr{ctx.args.Pop()}
+		} else {
+			for _, f := range ctx.actions {
+				err = f()
+				if err != nil {
+					break
+				}
 			}
 		}
 	}

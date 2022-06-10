@@ -22,12 +22,16 @@ func (me *Help) Parse(ctx Context) error {
 type ParamHelp struct {
 	Forms       []string
 	Description string
+	Options     []ParamHelp
 }
 
 func (me ParamHelp) Write(w io.Writer) {
 	fmt.Fprintf(w, "  %s\n", strings.Join(me.Forms, ", "))
 	if me.Description != "" {
 		fmt.Fprintf(w, "    %s\n", me.Description)
+	}
+	for _, o := range me.Options {
+		o.Write(w)
 	}
 }
 

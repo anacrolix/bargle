@@ -56,6 +56,15 @@ type Choice[T any] struct {
 	Choices map[string]T
 }
 
+func (me Choice[T]) Help(ph *ParamHelp) {
+	for choice, v := range me.Choices {
+		ph.Options = append(ph.Options, ParamHelp{
+			Forms:       []string{choice},
+			Description: fmt.Sprintf("%v", v),
+		})
+	}
+}
+
 func (me Choice[T]) Unmarshal(choice string, t *T) error {
 	var ok bool
 	*t, ok = me.Choices[choice]
@@ -116,9 +125,11 @@ func (me *unaryOption[T]) switchForms() (ret []string) {
 }
 
 func (me *unaryOption[T]) Help(f HelpFormatter) {
-	f.AddOption(ParamHelp{
+	ph := ParamHelp{
 		Forms: me.switchForms(),
-	})
+	}
+	me.Unmarshaler.Help(&ph)
+	f.AddOption(ph)
 }
 
 func (me *unaryOption[T]) AddLong(long string) *unaryOption[T] {
@@ -154,6 +165,7 @@ func (me unaryOption[T]) matchSwitch(ctx Context) bool {
 
 type UnaryUnmarshaler[T any] interface {
 	Unmarshal(s string, t *T) error
+	Help(ph *ParamHelp)
 }
 
 type BuiltinUnaryUnmarshaler[T interface {

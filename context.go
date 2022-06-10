@@ -66,7 +66,7 @@ func (me *context) Match(p Parser) bool {
 	case nil:
 		return true
 	default:
-		panic(err)
+		panic(controlError{err})
 	}
 }
 

@@ -2,8 +2,10 @@ package bargle
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/anacrolix/generics"
+	"golang.org/x/exp/maps"
 )
 
 type Choice[T any] struct {
@@ -11,12 +13,7 @@ type Choice[T any] struct {
 }
 
 func (me Choice[T]) Help(ph *ParamHelp) {
-	for choice := range me.Choices {
-		ph.Options = append(ph.Options, ParamHelp{
-			Forms: []string{choice},
-			//Description: fmt.Sprintf("%v", v),
-		})
-	}
+	ph.Values = strings.Join(maps.Keys(me.Choices), " | ")
 }
 
 func (me Choice[T]) Unmarshal(choice string, t *T) error {

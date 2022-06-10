@@ -22,11 +22,16 @@ func (me *Help) Parse(ctx Context) error {
 type ParamHelp struct {
 	Forms       []string
 	Description string
+	Values      string
 	Options     []ParamHelp
 }
 
 func (me ParamHelp) Write(w HelpWriter) {
-	w.WriteLine(strings.Join(me.Forms, ", "))
+	s := strings.Join(me.Forms, ", ")
+	if me.Values != "" {
+		s += ": " + me.Values
+	}
+	w.WriteLine(s)
 	if me.Description != "" {
 		w.Indented().WriteLine(me.Description)
 	}
@@ -42,6 +47,8 @@ type helpFormatter struct {
 
 func (me helpFormatter) Write(w io.Writer) {
 	hw := HelpWriter{w: w}
+	hw.WriteLine("usage:")
+	hw = hw.Indented()
 	for _, ph := range me.Options {
 		ph.Write(hw)
 	}

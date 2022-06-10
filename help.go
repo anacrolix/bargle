@@ -25,13 +25,13 @@ type ParamHelp struct {
 	Options     []ParamHelp
 }
 
-func (me ParamHelp) Write(w io.Writer) {
-	fmt.Fprintf(w, "  %s\n", strings.Join(me.Forms, ", "))
+func (me ParamHelp) Write(w HelpWriter) {
+	w.WriteLine(strings.Join(me.Forms, ", "))
 	if me.Description != "" {
-		fmt.Fprintf(w, "    %s\n", me.Description)
+		w.Indented().WriteLine(me.Description)
 	}
 	for _, o := range me.Options {
-		o.Write(w)
+		o.Write(w.Indented())
 	}
 }
 
@@ -41,11 +41,12 @@ type helpFormatter struct {
 }
 
 func (me helpFormatter) Write(w io.Writer) {
+	hw := HelpWriter{w: w}
 	for _, ph := range me.Options {
-		ph.Write(w)
+		ph.Write(hw)
 	}
 	for _, ph := range me.Commands {
-		ph.Write(w)
+		ph.Write(hw)
 	}
 }
 
@@ -61,9 +62,9 @@ func (me *helpFormatter) AddOption(ph ParamHelp) {
 	me.Options = append(me.Options, ph)
 }
 
-func (ph ParamHelp) Print(w io.Writer) {
-	fmt.Fprintf(w, "  %s\n", strings.Join(ph.Forms, ", "))
-	fmt.Fprintf(w, "    %s\n", ph.Description)
+func (ph ParamHelp) Print(w HelpWriter) {
+	w.WriteLine(strings.Join(ph.Forms, ", "))
+	w.Indented().WriteLine(ph.Description)
 }
 
 func (me *Help) AddParams(params ...ParamHelper) {
@@ -80,4 +81,18 @@ func (me Help) Print(w io.Writer) {
 
 type ParamHelper interface {
 	Help(f HelpFormatter)
+}
+
+type HelpWriter struct {
+	indent int
+	w      io.Writer
+}
+
+func (me HelpWriter) WriteLine(s string) {
+	fmt.Fprintf(me.w, "%s%s\n", strings.Repeat("  ", me.indent), s)
+}
+
+func (me HelpWriter) Indented() HelpWriter {
+	me.indent++
+	return me
 }

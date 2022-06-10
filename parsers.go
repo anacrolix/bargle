@@ -57,10 +57,10 @@ type Choice[T any] struct {
 }
 
 func (me Choice[T]) Help(ph *ParamHelp) {
-	for choice, v := range me.Choices {
+	for choice := range me.Choices {
 		ph.Options = append(ph.Options, ParamHelp{
-			Forms:       []string{choice},
-			Description: fmt.Sprintf("%v", v),
+			Forms: []string{choice},
+			//Description: fmt.Sprintf("%v", v),
 		})
 	}
 }

@@ -100,7 +100,7 @@ func unmarshalTarget[E targetElem, T target[E]](target T, s string) error {
 }
 
 func (me *Positional[T]) Parse(ctx Context) error {
-	return me.u.Unmarshal(ctx.Args(), &me.Value)
+	return me.U.Unmarshal(ctx.Args(), &me.Value)
 }
 
 type unaryOption[T any] struct {
@@ -203,13 +203,13 @@ type UnmarshalValuer[T any] interface {
 
 type Positional[T any] struct {
 	Value T
-	u     Unmarshaler[T]
-	name  string
+	U     Unmarshaler[T]
+	Name  string
 }
 
 func (me *Positional[T]) Help(f HelpFormatter) {
 	f.AddOption(ParamHelp{
-		Forms: []string{"<" + me.name + ">"},
+		Forms: []string{"<" + me.Name + ">"},
 	})
 }
 
@@ -243,7 +243,7 @@ func (String) Unmarshal(args Args, s *string) error {
 }
 
 func NewPositional[T any](u Unmarshaler[T]) *Positional[T] {
-	return &Positional[T]{u: u}
+	return &Positional[T]{U: u, Name: "arg"}
 }
 
 func NewString() *String {

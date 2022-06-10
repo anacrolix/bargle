@@ -20,6 +20,7 @@ func (f *Flag) Help(fm HelpFormatter) {
 	for _, s := range f.Shorts {
 		ph.Forms = append(ph.Forms, "-"+string(s), "+"+string(s))
 	}
+	fm.AddOption(ph)
 }
 
 func (f *Flag) AddLong(l string) *Flag {

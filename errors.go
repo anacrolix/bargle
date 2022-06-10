@@ -26,3 +26,9 @@ type controlError struct {
 }
 
 var expectedArgument = controlError{errors.New("expected argument")}
+
+type success struct{}
+
+func (success) Error() string {
+	return "success"
+}

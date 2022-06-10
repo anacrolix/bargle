@@ -33,6 +33,12 @@ type Subcommand struct {
 	Commands map[string]ContextFunc
 }
 
+func (me Subcommand) Help(f HelpFormatter) {
+	for name := range me.Commands {
+		f.AddCommand(name)
+	}
+}
+
 func (me Subcommand) Parse(ctx Context) error {
 	cmd := ctx.Args().Pop()
 	defer recoverType(func(err controlError) {
@@ -97,6 +103,22 @@ type unaryOption[T any] struct {
 
 func UnaryOption[T any](target UnaryUnmarshaler[T]) *unaryOption[T] {
 	return &unaryOption[T]{Unmarshaler: target}
+}
+
+func (me *unaryOption[T]) switchForms() (ret []string) {
+	for _, l := range me.Longs {
+		ret = append(ret, "--"+l)
+	}
+	for _, s := range me.Shorts {
+		ret = append(ret, "-"+string(s))
+	}
+	return
+}
+
+func (me *unaryOption[T]) Help(f HelpFormatter) {
+	f.AddOption(ParamHelp{
+		Forms: me.switchForms(),
+	})
 }
 
 func (me *unaryOption[T]) AddLong(long string) *unaryOption[T] {
@@ -166,6 +188,13 @@ type UnmarshalValuer[T any] interface {
 type Positional[T any] struct {
 	Value T
 	u     Unmarshaler[T]
+	name  string
+}
+
+func (me *Positional[T]) Help(f HelpFormatter) {
+	f.AddOption(ParamHelp{
+		Forms: []string{"<" + me.name + ">"},
+	})
 }
 
 //func (me *Positional[T, V]) Value() *V {

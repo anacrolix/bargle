@@ -18,27 +18,12 @@ func (me *Main) Defer(f func()) {
 func (me *Main) Run(f ContextFunc) {
 	ctx := NewContext(os.Args[1:])
 	err := ctx.Run(f)
-	if err == nil {
-		if ctx.args.Len() > 0 {
-			err = unhandledErr{ctx.args.Pop()}
-		} else {
-			for _, f := range ctx.actions {
-				err = f()
-				if err != nil {
-					break
-				}
-			}
-		}
-	}
 	if err != nil {
 		if me.OnError != nil {
 			me.OnError(err)
 		} else {
 			log.Printf("error running main: %v", err)
 		}
-	}
-	for i := range me.deferred {
-		me.deferred[len(me.deferred)-1-i]()
 	}
 	var (
 		exitCoder ExitCoder

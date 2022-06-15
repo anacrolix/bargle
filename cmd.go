@@ -15,7 +15,11 @@ var _ interface {
 } = Command{}
 
 func (me Command) Parse(ctx Context) error {
-	cmd := ctx.Args().Pop()
+	args := ctx.Args()
+	if args.Len() == 0 {
+		return noMatch
+	}
+	cmd := args.Pop()
 	defer recoverType(func(err controlError) {
 		panic(controlError{fmt.Errorf("%s: %w", cmd, err)})
 	})

@@ -13,6 +13,9 @@ func (me ShortParser) GotValue() bool {
 
 func (me *ShortParser) Parse(ctx Context) error {
 	args := ctx.Args()
+	if args.Len() == 0 {
+		return noMatch
+	}
 	next := []rune(args.Pop())
 	if len(next) < 2 {
 		return noMatch

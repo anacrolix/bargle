@@ -28,6 +28,11 @@ func (f *Flag) AddLong(l string) *Flag {
 	return f
 }
 
+func (f *Flag) AddShort(s rune) *Flag {
+	f.Shorts = append(f.Shorts, s)
+	return f
+}
+
 func (f *Flag) parseValue(no bool, us UnarySwitch, ctx Context) (err error) {
 	if us.GotValue() {
 		f.Value, err = strconv.ParseBool(ctx.Args().Pop())

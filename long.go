@@ -16,6 +16,9 @@ func (me LongParser) GotValue() bool {
 
 func (me *LongParser) Parse(ctx Context) error {
 	args := ctx.Args()
+	if args.Len() == 0 {
+		return noMatch
+	}
 	next := args.Pop()
 	if !strings.HasPrefix(next, "--") {
 		return noMatch

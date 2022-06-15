@@ -38,3 +38,5 @@ type success struct{}
 func (success) Error() string {
 	return "success"
 }
+
+type tried struct{}

@@ -8,11 +8,12 @@ type context struct {
 	args     Args
 	actions  []func() error
 	deferred []func()
+	tried    []ParamHelper
 }
 
 type Context = *context
 
-type ContextFunc func(Context)
+type ContextFunc func(ctx Context)
 
 func NewContext(args []string) Context {
 	return &context{
@@ -34,8 +35,21 @@ func (ctx *context) Run(f ContextFunc) (err error) {
 			ctx.deferred[len(ctx.deferred)-1-i]()
 		}
 	}()
-	f(ctx)
+	for {
+		again := false
+		func() {
+			defer recoverType(func(tried) {
+				again = true
+			})
+			f(ctx)
+		}()
+		if !again {
+			break
+		}
+		ctx.tried = nil
+	}
 	if ctx.args.Len() > 0 {
+		ctx.implicitHelp()
 		err = unhandledErr{ctx.args.Pop()}
 		return
 	}
@@ -48,8 +62,21 @@ func (ctx *context) Run(f ContextFunc) (err error) {
 	return
 }
 
+func (me *context) implicitHelp() bool {
+	help := Help{}
+	help.AddParams(me.tried...)
+	return me.Match(&help)
+}
+
+func (me *context) addTry(p Parser) {
+	if ph, ok := p.(ParamHelper); ok {
+		me.tried = append(me.tried, ph)
+	}
+}
+
 func (me *context) Parse(p Parser) {
 	args := me.args.Clone()
+	me.addTry(p)
 	err := p.Parse(me)
 	if err != nil {
 		panic(controlError{fmt.Errorf("parsing %q: %w", args.Pop(), err)})
@@ -58,6 +85,7 @@ func (me *context) Parse(p Parser) {
 
 func (me *context) Match(p Parser) bool {
 	args := me.args.Clone()
+	me.addTry(p)
 	err := p.Parse(me)
 	switch err {
 	case noMatch:
@@ -118,4 +146,10 @@ func (me *context) MissingArgument(name string) {
 
 func (me *context) Success() {
 	panic(success{})
+}
+
+func (me *context) Try(p Parser) {
+	if me.Match(p) {
+		panic(tried{})
+	}
 }

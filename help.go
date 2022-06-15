@@ -15,10 +15,26 @@ type Help struct {
 	params []ParamHelper
 }
 
+type FormHelper interface {
+	Help(*ParamHelp)
+}
+
+func (me Help) matchers() []interface {
+	Parser
+	FormHelper
+} {
+	return []interface {
+		Parser
+		FormHelper
+	}{&LongParser{Long: "help"}, &ShortParser{Short: 'h'}}
+}
+
 func (me *Help) Parse(ctx Context) error {
-	if ctx.Match(&LongParser{Long: "help"}) {
-		me.Print(os.Stdout)
-		ctx.Success()
+	for _, m := range me.matchers() {
+		if ctx.Match(m) {
+			me.Print(os.Stdout)
+			ctx.Success()
+		}
 	}
 	return noMatch
 }
@@ -84,10 +100,19 @@ func (me *Help) AddParams(params ...ParamHelper) {
 
 func (me Help) Print(w io.Writer) {
 	f := helpFormatter{}
+	me.Help(&f)
 	for _, p := range me.params {
 		p.Help(&f)
 	}
 	f.Write(w)
+}
+
+func (me Help) Help(f HelpFormatter) {
+	ph := ParamHelp{Description: "help (this message)"}
+	for _, h := range me.matchers() {
+		h.Help(&ph)
+	}
+	f.AddOption(ph)
 }
 
 type ParamHelper interface {

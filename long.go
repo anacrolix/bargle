@@ -31,3 +31,7 @@ func (me *LongParser) Parse(ctx Context) error {
 	}
 	return nil
 }
+
+func (me LongParser) Help(f *ParamHelp) {
+	f.Forms = append(f.Forms, "--"+me.Long)
+}

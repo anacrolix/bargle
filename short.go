@@ -42,3 +42,7 @@ func (me *ShortParser) Parse(ctx Context) error {
 	}
 	return nil
 }
+
+func (me ShortParser) Help(f *ParamHelp) {
+	f.Forms = append(f.Forms, "-"+string(me.Short))
+}

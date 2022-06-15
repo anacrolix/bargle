@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/anacrolix/generics v0.0.0-20220615071502-77f08b92d35b // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/frankban/quicktest v1.14.3 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/kr/pretty v0.3.0 // indirect

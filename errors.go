@@ -25,7 +25,13 @@ type controlError struct {
 	error
 }
 
-var expectedArgument = controlError{errors.New("expected argument")}
+func (me controlError) Unwrap() error {
+	return me.error
+}
+
+func (controlError) ExitCode() int {
+	return 2
+}
 
 type success struct{}
 

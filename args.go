@@ -17,9 +17,6 @@ func (me *args) Push(s string) {
 }
 
 func (me *args) Pop() string {
-	if len(me.ss) == 0 {
-		panic(expectedArgument)
-	}
 	i := len(me.ss) - 1
 	s := me.ss[i]
 	me.ss = me.ss[:i]

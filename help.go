@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+type TargetHelper interface {
+	TargetHelp() string
+}
+
 type Help struct {
 	params []ParamHelper
 }

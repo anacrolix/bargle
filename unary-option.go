@@ -1,5 +1,9 @@
 package bargle
 
+import (
+	"fmt"
+)
+
 type UnaryOption[T any] struct {
 	Value       T
 	Unmarshaler UnaryUnmarshaler[T]
@@ -21,19 +25,11 @@ func (me *UnaryOption[T]) switchForms() (ret []string) {
 	return
 }
 
-func (me *UnaryOption[T]) initUnmarshaler() {
-	if me.Unmarshaler != nil {
-		return
-	}
-	me.Unmarshaler = BuiltinUnaryUnmarshaler[T]{}
-}
-
 func (me *UnaryOption[T]) Help(f HelpFormatter) {
 	ph := ParamHelp{
 		Forms: me.switchForms(),
 	}
-	me.initUnmarshaler()
-	me.Unmarshaler.Help(&ph)
+	ph.Values = me.Unmarshaler.TargetHelp()
 	f.AddOption(ph)
 }
 
@@ -51,8 +47,15 @@ func (me *UnaryOption[T]) Parse(ctx Context) error {
 	if !me.matchSwitch(ctx) {
 		return noMatch
 	}
-	me.initUnmarshaler()
-	return me.Unmarshaler.UnaryUnmarshal(ctx.Args().Pop(), &me.Value)
+	arg := ctx.Args().Pop()
+	if me.Unmarshaler == nil {
+		return fmt.Errorf("unary option %s has no unmarshaler", me.switchForms())
+	}
+	err := me.Unmarshaler.UnaryUnmarshal(arg, &me.Value)
+	if err != nil {
+		err = fmt.Errorf("unmarshalling %q: %w", arg, err)
+	}
+	return err
 }
 
 func (me UnaryOption[T]) matchSwitch(ctx Context) bool {

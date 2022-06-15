@@ -2,7 +2,7 @@ package bargle
 
 type Positional[T any] struct {
 	Value T
-	U     Unmarshaler[T]
+	U     UnaryUnmarshaler[T]
 	Name  string
 }
 
@@ -13,9 +13,9 @@ func (me *Positional[T]) Help(f HelpFormatter) {
 }
 
 func (me *Positional[T]) Parse(ctx Context) error {
-	return me.U.Unmarshal(ctx.Args(), &me.Value)
+	return me.U.UnaryUnmarshal(ctx.Args().Pop(), &me.Value)
 }
 
-func NewPositional[T any](u Unmarshaler[T]) *Positional[T] {
+func NewPositional[T any](u UnaryUnmarshaler[T]) *Positional[T] {
 	return &Positional[T]{U: u, Name: "arg"}
 }

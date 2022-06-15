@@ -12,8 +12,8 @@ type Choice[T any] struct {
 	Choices map[string]T
 }
 
-func (me Choice[T]) Help(ph *ParamHelp) {
-	ph.Values = strings.Join(maps.Keys(me.Choices), " | ")
+func (me Choice[T]) TargetHelp() string {
+	return strings.Join(maps.Keys(me.Choices), " | ")
 }
 
 func (me Choice[T]) UnaryUnmarshal(choice string, t *T) error {

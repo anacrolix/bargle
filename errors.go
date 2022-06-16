@@ -3,6 +3,8 @@ package bargle
 import (
 	"errors"
 	"fmt"
+
+	"github.com/anacrolix/generics"
 )
 
 var noMatch = errors.New("no match")
@@ -46,3 +48,23 @@ func (success) Error() string {
 }
 
 type tried struct{}
+
+type parseError struct {
+	inner error
+	arg   generics.Option[string]
+	param Param
+}
+
+func (me parseError) Unwrap() error {
+	return me.inner
+}
+
+func (me parseError) Error() string {
+	if me.arg.Ok {
+		return fmt.Sprintf("parsing %v from %q: %v", me.param, me.arg.Value, me.inner)
+	} else {
+		return fmt.Sprintf("parsing %v: %v", me.param, me.inner)
+	}
+}
+
+var missingArgument = errors.New("missing argument")

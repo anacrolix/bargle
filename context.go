@@ -12,6 +12,7 @@ type context struct {
 	actions  *[]func() error
 	deferred *[]func()
 	tried    []ParamHelper
+	helping  bool
 }
 
 type Context = *context
@@ -88,7 +89,15 @@ func (me *context) Parse(p Parser) {
 		me.implicitHelp()
 	}
 	if err != nil {
-		panic(controlError{fmt.Errorf("parsing %q: %w", args.Pop(), err)})
+		var arg generics.Option[string]
+		if args.Len() != 0 {
+			arg.Set(args.Pop())
+		}
+		panic(controlError{parseError{
+			inner: err,
+			arg:   arg,
+			param: p,
+		}})
 	}
 }
 
@@ -109,9 +118,12 @@ func (me *context) Match(p Parser) bool {
 
 func (me *context) MustParseOne(params ...Parser) {
 	for _, p := range params {
-		if me.Match(p) {
+		if me.Match(p) /*&& !me.Helping()*/ {
 			return
 		}
+	}
+	if me.Helping() {
+		return
 	}
 	me.implicitHelp()
 	me.Unhandled()
@@ -184,4 +196,12 @@ func (me *context) NewChild() Context {
 	child := *me
 	child.tried = nil
 	return &child
+}
+
+func (me *context) Helping() bool {
+	return me.helping
+}
+
+func (me *context) StartHelping() {
+	me.helping = true
 }

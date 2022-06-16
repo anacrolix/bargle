@@ -8,3 +8,7 @@ type ParamParser interface {
 	Parser
 	ParamHelper
 }
+
+type Param interface {
+	Parser
+}

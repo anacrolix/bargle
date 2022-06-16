@@ -14,7 +14,7 @@ func (me *Positional[T]) Help(f HelpFormatter) {
 
 func (me *Positional[T]) Parse(ctx Context) error {
 	if ctx.Args().Len() == 0 {
-		return noMatch
+		return missingArgument
 	}
 	if !ctx.MatchPos() {
 		return noMatch

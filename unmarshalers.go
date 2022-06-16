@@ -102,3 +102,15 @@ func (String) UnaryUnmarshal(arg string, s *string) error {
 func NewString() *String {
 	return &String{}
 }
+
+func doUnaryUnmarshal[T any](s string, t *T, u UnaryUnmarshaler[T]) error {
+	if u != nil {
+		return u.UnaryUnmarshal(s, t)
+	}
+	switch p := any(t).(type) {
+	case *string:
+		return String{}.UnaryUnmarshal(s, p)
+	default:
+		panic(fmt.Sprintf("unhandled default unary unmarshaler type %T", *t))
+	}
+}

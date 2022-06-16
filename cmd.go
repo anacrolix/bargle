@@ -34,5 +34,5 @@ func (me Command) Parse(ctx Context) error {
 }
 
 func (me Command) Help(f HelpFormatter) {
-	f.AddCommand(me.Name)
+	f.AddCommand(me.Name, me.Desc)
 }

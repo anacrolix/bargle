@@ -10,7 +10,7 @@ type Subcommand struct {
 
 func (me Subcommand) Help(f HelpFormatter) {
 	for name := range me.Commands {
-		f.AddCommand(name)
+		f.AddCommand(name, "use bargle.Command")
 	}
 }
 

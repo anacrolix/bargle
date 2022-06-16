@@ -51,10 +51,10 @@ func (me ParamHelp) Write(w HelpWriter) {
 	if me.Values != "" {
 		s += ": " + me.Values
 	}
-	w.WriteLine(s)
 	if me.Description != "" {
-		w.Indented().WriteLine(me.Description)
+		s += "\t" + me.Description
 	}
+	w.WriteLine(s)
 	for _, o := range me.Options {
 		o.Write(w.Indented())
 	}
@@ -81,9 +81,10 @@ func (me helpFormatter) Write(w io.Writer) {
 
 type HelpFormatter = *helpFormatter
 
-func (me *helpFormatter) AddCommand(name string) {
+func (me *helpFormatter) AddCommand(name, desc string) {
 	me.Commands = append(me.Commands, ParamHelp{
-		Forms: []string{name},
+		Forms:       []string{name},
+		Description: desc,
 	})
 }
 

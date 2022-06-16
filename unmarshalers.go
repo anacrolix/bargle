@@ -1,6 +1,7 @@
 package bargle
 
 import (
+	"encoding"
 	"fmt"
 	"strconv"
 
@@ -106,6 +107,9 @@ func NewString() *String {
 func doUnaryUnmarshal[T any](s string, t *T, u UnaryUnmarshaler[T]) error {
 	if u != nil {
 		return u.UnaryUnmarshal(s, t)
+	}
+	if tu, ok := any(t).(encoding.TextUnmarshaler); ok {
+		return tu.UnmarshalText([]byte(s))
 	}
 	switch p := any(t).(type) {
 	case *string:

@@ -3,7 +3,6 @@ package bargle
 import (
 	"fmt"
 	"io"
-	"os"
 	"strings"
 )
 
@@ -32,8 +31,8 @@ func (me Help) matchers() []interface {
 func (me *Help) Parse(ctx Context) error {
 	for _, m := range me.matchers() {
 		if ctx.Match(m) {
-			me.Print(os.Stdout)
-			ctx.Success()
+			ctx.StartHelping()
+			return nil
 		}
 	}
 	return noMatch

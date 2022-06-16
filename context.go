@@ -81,9 +81,12 @@ func (ctx *context) doHelpCommand() {
 }
 
 func (me *context) implicitHelp() bool {
+	if me.Helping() {
+		return false
+	}
 	help := Help{}
 	help.AddParams(me.tried...)
-	return me.Match(&help)
+	return me.matchAddTry(&help, false)
 }
 
 func (me *context) addTry(p Parser) {
@@ -100,7 +103,9 @@ func (me *context) Parse(p Parser) {
 	}
 	err := p.Parse(me)
 	if err == noMatch {
-		me.implicitHelp()
+		if me.implicitHelp() {
+			return
+		}
 	}
 	if err != nil {
 		var arg generics.Option[string]
@@ -115,9 +120,11 @@ func (me *context) Parse(p Parser) {
 	}
 }
 
-func (me *context) Match(p Parser) bool {
+func (me *context) matchAddTry(p Parser, addTry bool) bool {
 	args := me.args.Clone()
-	me.addTry(p)
+	if addTry {
+		me.addTry(p)
+	}
 	err := p.Parse(me)
 	switch err {
 	case noMatch:
@@ -130,6 +137,10 @@ func (me *context) Match(p Parser) bool {
 	}
 }
 
+func (me *context) Match(p Parser) bool {
+	return me.matchAddTry(p, true)
+}
+
 func (me *context) MustParseOne(params ...Parser) {
 	for _, p := range params {
 		if me.Match(p) /*&& !me.Helping()*/ {
@@ -139,7 +150,9 @@ func (me *context) MustParseOne(params ...Parser) {
 	if me.Helping() {
 		return
 	}
-	me.implicitHelp()
+	if me.implicitHelp() {
+		return
+	}
 	me.Unhandled()
 }
 

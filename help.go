@@ -60,8 +60,9 @@ func (me ParamHelp) Write(w HelpWriter) {
 }
 
 type helpFormatter struct {
-	Options  []ParamHelp
-	Commands []ParamHelp
+	Options    []ParamHelp
+	Positional []ParamHelp
+	Commands   []ParamHelp
 }
 
 func (me helpFormatter) Write(w io.Writer) {
@@ -69,6 +70,12 @@ func (me helpFormatter) Write(w io.Writer) {
 	hw.WriteLine("options:")
 	for _, ph := range me.Options {
 		ph.Write(hw.Indented())
+	}
+	if len(me.Positional) != 0 {
+		hw.WriteLine("arguments:")
+		for _, ph := range me.Positional {
+			ph.Write(hw.Indented())
+		}
 	}
 	if len(me.Commands) != 0 {
 		hw.WriteLine("commands:")
@@ -85,6 +92,10 @@ func (me *helpFormatter) AddCommand(name, desc string) {
 		Forms:       []string{name},
 		Description: desc,
 	})
+}
+
+func (me *helpFormatter) AddPositional(ph ParamHelp) {
+	me.Positional = append(me.Positional, ph)
 }
 
 func (me *helpFormatter) AddOption(ph ParamHelp) {

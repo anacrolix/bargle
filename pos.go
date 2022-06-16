@@ -1,14 +1,20 @@
 package bargle
 
+import (
+	"fmt"
+)
+
 type Positional[T any] struct {
 	Value T
 	U     UnaryUnmarshaler[T]
 	Name  string
+	Desc  string
 }
 
 func (me *Positional[T]) Help(f HelpFormatter) {
-	f.AddOption(ParamHelp{
-		Forms: []string{"<" + me.Name + ">"},
+	f.AddPositional(ParamHelp{
+		Forms:       []string{fmt.Sprintf("<%v>", me.Name)},
+		Description: me.Desc,
 	})
 }
 

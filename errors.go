@@ -15,6 +15,12 @@ func (me unhandledErr) Error() string {
 	return fmt.Sprintf("unhandled argument: %q", me.arg)
 }
 
+type parseFailure struct{}
+
+func (p parseFailure) Error() string {
+	return "parse failure"
+}
+
 type ExitCoder interface {
 	ExitCode() int
 }

@@ -13,7 +13,13 @@ func (me *Positional[T]) Help(f HelpFormatter) {
 }
 
 func (me *Positional[T]) Parse(ctx Context) error {
-	return me.U.UnaryUnmarshal(ctx.Args().Pop(), &me.Value)
+	if ctx.Args().Len() == 0 {
+		return noMatch
+	}
+	if !ctx.MatchPos() {
+		return noMatch
+	}
+	return doUnaryUnmarshal(ctx.Args().Pop(), &me.Value, me.U)
 }
 
 func NewPositional[T any](u UnaryUnmarshaler[T]) *Positional[T] {

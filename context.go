@@ -2,12 +2,15 @@ package bargle
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/anacrolix/generics"
 )
 
 type context struct {
 	args     Args
-	actions  []func() error
-	deferred []func()
+	actions  *[]func() error
+	deferred *[]func()
 	tried    []ParamHelper
 }
 
@@ -16,9 +19,12 @@ type Context = *context
 type ContextFunc func(ctx Context)
 
 func NewContext(args []string) Context {
-	return &context{
+	ctx := &context{
 		args: NewArgs(args),
 	}
+	generics.InitNew(&ctx.actions)
+	generics.InitNew(&ctx.deferred)
+	return ctx
 }
 
 func (me *context) Args() Args {
@@ -31,8 +37,8 @@ func (ctx *context) Run(f ContextFunc) (err error) {
 	})
 	defer recoverType(func(success) {})
 	defer func() {
-		for i := range ctx.deferred {
-			ctx.deferred[len(ctx.deferred)-1-i]()
+		for i := range *ctx.deferred {
+			(*ctx.deferred)[len(*ctx.deferred)-1-i]()
 		}
 	}()
 	for {
@@ -53,7 +59,7 @@ func (ctx *context) Run(f ContextFunc) (err error) {
 		err = unhandledErr{ctx.args.Pop()}
 		return
 	}
-	for _, f := range ctx.actions {
+	for _, f := range *ctx.actions {
 		err = f()
 		if err != nil {
 			break
@@ -78,6 +84,9 @@ func (me *context) Parse(p Parser) {
 	args := me.args.Clone()
 	me.addTry(p)
 	err := p.Parse(me)
+	if err == noMatch {
+		me.implicitHelp()
+	}
 	if err != nil {
 		panic(controlError{fmt.Errorf("parsing %q: %w", args.Pop(), err)})
 	}
@@ -104,6 +113,7 @@ func (me *context) MustParseOne(params ...Parser) {
 			return
 		}
 	}
+	me.implicitHelp()
 	me.Unhandled()
 }
 
@@ -112,14 +122,17 @@ func (me *context) Done() bool {
 }
 
 func (me *context) Defer(f func()) {
-	me.deferred = append(me.deferred, f)
+	*me.deferred = append(*me.deferred, f)
 }
 
 func (me *context) AfterParse(f func() error) {
-	me.actions = append(me.actions, f)
+	*me.actions = append(*me.actions, f)
 }
 
 func (me *context) Unhandled() {
+	if me.args.Len() == 0 {
+		panic(controlError{parseFailure{}})
+	}
 	panic(controlError{unhandledErr{me.args.Pop()}})
 }
 
@@ -152,4 +165,23 @@ func (me *context) Try(p Parser) {
 	if me.Match(p) {
 		panic(tried{})
 	}
+}
+
+// Returns whether the next arg can be parsed as positional. This could allow to handle -- and drop
+// into positional only arguments.
+func (me *context) MatchPos() bool {
+	if me.args.Len() == 0 {
+		return true
+	}
+	args := me.args.Clone()
+	if strings.HasPrefix(args.Pop(), "-") {
+		return false
+	}
+	return true
+}
+
+func (me *context) NewChild() Context {
+	child := *me
+	child.tried = nil
+	return &child
 }

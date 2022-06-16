@@ -27,7 +27,7 @@ func (me Command) Parse(ctx Context) error {
 		return noMatch
 	}
 	// This doesn't start a new try scope. That's probably wrong.
-	me.Func(ctx)
+	me.Func(ctx.NewChild())
 	return nil
 }
 

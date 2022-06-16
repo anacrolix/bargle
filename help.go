@@ -67,13 +67,15 @@ type helpFormatter struct {
 
 func (me helpFormatter) Write(w io.Writer) {
 	hw := HelpWriter{w: w}
-	hw.WriteLine("usage:")
-	hw = hw.Indented()
+	hw.WriteLine("options:")
 	for _, ph := range me.Options {
-		ph.Write(hw)
+		ph.Write(hw.Indented())
 	}
-	for _, ph := range me.Commands {
-		ph.Write(hw)
+	if len(me.Commands) != 0 {
+		hw.WriteLine("commands:")
+		for _, ph := range me.Commands {
+			ph.Write(hw.Indented())
+		}
 	}
 }
 

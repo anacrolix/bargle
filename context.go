@@ -2,6 +2,7 @@ package bargle
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/anacrolix/generics"
@@ -55,6 +56,7 @@ func (ctx *context) Run(f ContextFunc) (err error) {
 		}
 		ctx.tried = nil
 	}
+	ctx.doHelpCommand()
 	if ctx.args.Len() > 0 {
 		ctx.implicitHelp()
 		err = unhandledErr{ctx.args.Pop()}
@@ -67,6 +69,15 @@ func (ctx *context) Run(f ContextFunc) (err error) {
 		}
 	}
 	return
+}
+
+func (ctx *context) doHelpCommand() {
+	if ctx.Helping() {
+		var help Help
+		help.AddParams(ctx.tried...)
+		help.Print(os.Stdout)
+		ctx.Success()
+	}
 }
 
 func (me *context) implicitHelp() bool {
@@ -84,6 +95,9 @@ func (me *context) addTry(p Parser) {
 func (me *context) Parse(p Parser) {
 	args := me.args.Clone()
 	me.addTry(p)
+	if me.Helping() {
+		return
+	}
 	err := p.Parse(me)
 	if err == noMatch {
 		me.implicitHelp()

@@ -181,13 +181,14 @@ func (me *context) Fail(err error) {
 
 func (me *context) ParseUntilDone(ps ...Parser) {
 start:
-	for me.Done() {
-		return
-	}
 	for _, p := range ps {
 		if me.Match(p) {
 			goto start
 		}
+	}
+	me.implicitHelp()
+	if me.Helping() {
+		return
 	}
 	me.Unhandled()
 }

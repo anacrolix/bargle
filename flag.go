@@ -36,9 +36,13 @@ func (f *Flag) AddShort(s rune) *Flag {
 	return f
 }
 
-func (f *Flag) matchResult(no bool, us UnarySwitch, args Args) MatchResult {
+func (f *Flag) matchResult(no bool, us UnarySwitch, args Args, matchedArg string) MatchResult {
 	mr := flagMatchResult{
-		args:   args,
+		baseMatchResult: baseMatchResult{
+			args:  args,
+			param: f,
+			match: matchedArg,
+		},
 		target: &f.Value,
 		no:     no,
 	}
@@ -49,19 +53,10 @@ func (f *Flag) matchResult(no bool, us UnarySwitch, args Args) MatchResult {
 }
 
 type flagMatchResult struct {
-	matched string
-	args    Args
-	value   generics.Option[string]
-	target  *bool
-	no      bool
-}
-
-func (f flagMatchResult) Matched() generics.Option[string] {
-	return generics.Some(f.matched)
-}
-
-func (f flagMatchResult) Args() Args {
-	return f.args
+	baseMatchResult
+	value  generics.Option[string]
+	target *bool
+	no     bool
 }
 
 func (f flagMatchResult) Parse(ctx Context) (err error) {
@@ -77,11 +72,6 @@ func (f flagMatchResult) Parse(ctx Context) (err error) {
 
 }
 
-func (f flagMatchResult) Param() Param {
-	//TODO implement me
-	panic("implement me")
-}
-
 var _ MatchResult = flagMatchResult{}
 
 func (f *Flag) Match(args Args) (mr MatchResult) {
@@ -89,24 +79,24 @@ func (f *Flag) Match(args Args) (mr MatchResult) {
 		_args := args.Clone()
 		p := LongParser{Long: l, CanUnary: true}
 		if p.Match(_args) {
-			return f.matchResult(false, p, _args)
+			return f.matchResult(false, p, _args, args.Pop())
 		}
 		_args = args.Clone()
 		p.Long = "no-" + l
 		if p.Match(_args) {
-			return f.matchResult(true, p, _args)
+			return f.matchResult(true, p, _args, args.Pop())
 		}
 	}
 	for _, l := range f.Shorts {
 		_args := args.Clone()
 		p := ShortParser{Short: l, CanUnary: true}
 		if p.Match(_args) {
-			return f.matchResult(false, p, _args)
+			return f.matchResult(false, p, _args, args.Pop())
 		}
 		_args = args.Clone()
 		p.Prefix = '+'
 		if p.Match(_args) {
-			return f.matchResult(true, p, _args)
+			return f.matchResult(true, p, _args, args.Pop())
 		}
 	}
 	return noMatch

@@ -34,6 +34,11 @@ func (me HelpCommand) AddToCommand(cmd *Command) {
 		Name: "help",
 		Desc: "help with subcommands",
 	}
+	recurse := &Flag{
+		Longs:  []string{"recurse"},
+		Shorts: []rune{'r'},
+	}
+	sub.Options = append(sub.Options, recurse)
 	addHelpSubcommands(&sub, cmd)
 	cmd.Positionals = append(cmd.Positionals, sub)
 }

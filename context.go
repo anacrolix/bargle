@@ -3,7 +3,6 @@ package bargle
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/anacrolix/generics"
@@ -13,7 +12,6 @@ type context struct {
 	args     Args
 	actions  *[]func() error
 	deferred *[]func()
-	tried    []ParamHelper
 	helping  bool
 }
 
@@ -120,15 +118,6 @@ func (ctx *context) runMatchResult(mr MatchResult, ranSubCmd *bool) error {
 	return nil
 }
 
-func (ctx *context) doHelpCommand() {
-	if ctx.Helping() {
-		var help Help
-		help.AddParams(ctx.tried...)
-		help.Print(os.Stdout)
-		ctx.Success()
-	}
-}
-
 func (me *context) Match(m Matcher) (ret MatchResult) {
 	return m.Match(me.args.Clone())
 }
@@ -175,12 +164,6 @@ func (me *context) MatchPos() bool {
 		return false
 	}
 	return true
-}
-
-func (me *context) NewChild() Context {
-	child := *me
-	child.tried = nil
-	return &child
 }
 
 func (me *context) Helping() bool {

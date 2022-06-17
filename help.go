@@ -10,22 +10,8 @@ type TargetHelper interface {
 	TargetHelp() string
 }
 
-type Help struct {
-	params []ParamHelper
-}
-
 type FormHelper interface {
 	Help(*ParamHelp)
-}
-
-func (me Help) matchers() []interface {
-	//Matcher
-	FormHelper
-} {
-	return []interface {
-		//Matcher
-		FormHelper
-	}{&LongParser{Long: "help"}, &ShortParser{Short: 'h'}}
 }
 
 type ParamHelp struct {
@@ -33,6 +19,7 @@ type ParamHelp struct {
 	Description string
 	Values      string
 	Options     []ParamHelp
+	Subcommand  commandHelp
 }
 
 func (me ParamHelp) Write(w HelpWriter) {
@@ -49,13 +36,13 @@ func (me ParamHelp) Write(w HelpWriter) {
 	}
 }
 
-type helpFormatter struct {
+type commandHelp struct {
 	Options    []ParamHelp
 	Positional []ParamHelp
 	Commands   []ParamHelp
 }
 
-func (me helpFormatter) Write(w io.Writer) {
+func (me commandHelp) Write(w io.Writer) {
 	hw := HelpWriter{w: w}
 	if len(me.Options) != 0 {
 		hw.WriteLine("options:")
@@ -77,48 +64,21 @@ func (me helpFormatter) Write(w io.Writer) {
 	}
 }
 
-type HelpFormatter = *helpFormatter
-
-func (me *helpFormatter) AddCommand(ph ParamHelp) {
+func (me *commandHelp) AddCommand(ph ParamHelp) {
 	me.Commands = append(me.Commands, ph)
 }
 
-func (me *helpFormatter) AddPositional(ph ParamHelp) {
+func (me *commandHelp) AddPositional(ph ParamHelp) {
 	me.Positional = append(me.Positional, ph)
 }
 
-func (me *helpFormatter) AddOption(ph ParamHelp) {
+func (me *commandHelp) AddOption(ph ParamHelp) {
 	me.Options = append(me.Options, ph)
 }
 
 func (ph ParamHelp) Print(w HelpWriter) {
 	w.WriteLine(strings.Join(ph.Forms, ", "))
 	w.Indented().WriteLine(ph.Description)
-}
-
-func (me *Help) AddParams(params ...ParamHelper) {
-	me.params = append(me.params, params...)
-}
-
-func (me Help) Print(w io.Writer) {
-	f := helpFormatter{}
-	me.Help(&f)
-	for _, p := range me.params {
-		p.Help(&f)
-	}
-	f.Write(w)
-}
-
-func (me Help) Help(f HelpFormatter) {
-	ph := ParamHelp{Description: "help (this message)"}
-	for _, h := range me.matchers() {
-		h.Help(&ph)
-	}
-	f.AddOption(ph)
-}
-
-type ParamHelper interface {
-	Help(f HelpFormatter)
 }
 
 type HelpWriter struct {

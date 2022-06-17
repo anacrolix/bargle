@@ -42,26 +42,41 @@ type commandHelp struct {
 	Commands   []ParamHelp
 }
 
-func (me commandHelp) Write(w io.Writer) {
-	hw := HelpWriter{w: w}
-	if len(me.Options) != 0 {
+type helpFormatter struct {
+	recurse bool
+}
+
+func (me helpFormatter) writeParam(hw HelpWriter, ph ParamHelp) {
+	ph.Write(hw)
+	if me.recurse {
+		me.writeCommand(hw.Indented(), ph.Subcommand)
+	}
+}
+
+func (me helpFormatter) writeCommand(hw HelpWriter, ch commandHelp) {
+	if len(ch.Options) != 0 {
 		hw.WriteLine("options:")
-		for _, ph := range me.Options {
-			ph.Write(hw.Indented())
+		for _, ph := range ch.Options {
+			me.writeParam(hw.Indented(), ph)
 		}
 	}
-	if len(me.Positional) != 0 {
+	if len(ch.Positional) != 0 {
 		hw.WriteLine("arguments:")
-		for _, ph := range me.Positional {
-			ph.Write(hw.Indented())
+		for _, ph := range ch.Positional {
+			me.writeParam(hw.Indented(), ph)
 		}
 	}
-	if len(me.Commands) != 0 {
+	if len(ch.Commands) != 0 {
 		hw.WriteLine("commands:")
-		for _, ph := range me.Commands {
-			ph.Write(hw.Indented())
+		for _, ph := range ch.Commands {
+			me.writeParam(hw.Indented(), ph)
 		}
 	}
+}
+
+func (me helpFormatter) Write(w io.Writer, ch commandHelp) {
+	hw := HelpWriter{w: w}
+	me.writeCommand(hw, ch)
 }
 
 func (me *commandHelp) AddCommand(ph ParamHelp) {

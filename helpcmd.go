@@ -1,6 +1,7 @@
 package bargle
 
 import (
+	"log"
 	"os"
 )
 
@@ -61,8 +62,9 @@ func addHelpSubcommands(to *Subcommand, from Command, recurse *bool) {
 func helpCommandAction(cmd Command, recurse *bool) func() error {
 	return func() error {
 		var hf commandHelp
+		log.Print(*recurse)
 		formatCommandHelp(&hf, cmd, *recurse)
-		hf.Write(os.Stdout)
+		helpFormatter{*recurse}.Write(os.Stdout, hf)
 		return nil
 	}
 }
@@ -77,7 +79,7 @@ func formatCommandHelp(hf *commandHelp, cmd Command, recurse bool) {
 			if recurse {
 				formatCommandHelp(&cmdHelp.Subcommand, p.Subcommand().Value, true)
 			}
-			hf.AddCommand(p.Help())
+			hf.AddCommand(cmdHelp)
 		} else {
 			hf.AddPositional(p.Help())
 		}

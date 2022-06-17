@@ -31,7 +31,7 @@ func (me *ShortParser) Match(args Args) bool {
 	me.gotValue = false
 	next = next[2:]
 	if len(next) == 0 {
-		return false
+		return true
 	}
 	if me.CanUnary {
 		if next[0] == '=' {

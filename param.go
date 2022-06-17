@@ -8,6 +8,7 @@ type Param interface {
 	Satisfied() bool
 	Matcher
 	Subcommand() generics.Option[Command]
+	Help() ParamHelp
 }
 
 type paramDefaults struct{}

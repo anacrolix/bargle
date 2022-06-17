@@ -11,6 +11,13 @@ type Subcommand struct {
 	Desc string
 }
 
+func (me Subcommand) Help() ParamHelp {
+	return ParamHelp{
+		Forms:       []string{me.Name},
+		Description: me.Desc,
+	}
+}
+
 func (me Subcommand) Match(args Args) MatchResult {
 	if args.Len() == 0 {
 		return noMatch
@@ -19,11 +26,11 @@ func (me Subcommand) Match(args Args) MatchResult {
 	if name != me.Name {
 		return noMatch
 	}
-	return matchedNoParse{
+	return matchedNoParse{baseMatchResult{
 		match: name,
 		param: me,
 		args:  args,
-	}
+	}}
 }
 
 func (me Subcommand) Subcommand() generics.Option[Command] {

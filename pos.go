@@ -14,23 +14,24 @@ type Positional[T any] struct {
 }
 
 func (me *Positional[T]) Match(args Args) MatchResult {
-	return unaryMatchResult[T]{
+	mr := unaryMatchResult[T]{
 		u:      me.U,
-		args:   args,
 		target: &me.Value,
-		param:  me,
 	}
+	mr.args = args
+	mr.param = me
+	return mr
 }
 
 func (me *Positional[T]) Satisfied() bool {
 	return me.ok
 }
 
-func (me *Positional[T]) Help(f HelpFormatter) {
-	f.AddPositional(ParamHelp{
+func (me *Positional[T]) Help() ParamHelp {
+	return ParamHelp{
 		Forms:       []string{fmt.Sprintf("<%v>", me.Name)},
 		Description: me.Desc,
-	})
+	}
 }
 
 //func (me *Positional[T]) Parse(ctx Context) error {

@@ -34,23 +34,27 @@ func (n noMatchType) Param() Param {
 }
 
 type matchedNoParse struct {
-	match string
-	param Param
-	args  Args
-}
-
-func (m matchedNoParse) Matched() generics.Option[string] {
-	return generics.Some(m.match)
-}
-
-func (m matchedNoParse) Args() Args {
-	return m.args
+	baseMatchResult
 }
 
 func (m matchedNoParse) Parse(ctx Context) error {
 	return nil
 }
 
-func (m matchedNoParse) Param() Param {
-	return m.param
+type baseMatchResult struct {
+	args  Args
+	param Param
+	match string
+}
+
+func (me baseMatchResult) Matched() generics.Option[string] {
+	return generics.Some(me.match)
+}
+
+func (me baseMatchResult) Args() Args {
+	return me.args
+}
+
+func (me baseMatchResult) Param() Param {
+	return me.param
 }

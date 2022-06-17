@@ -57,6 +57,7 @@ func (ctx *context) Run(cmd Command) (err error) {
 }
 
 func (ctx *context) runCommand(cmd Command) error {
+	ranSubCmd := false
 options:
 	matches := make([]MatchResult, 0, len(cmd.Options))
 	for _, opt := range cmd.Options {
@@ -67,7 +68,7 @@ options:
 	}
 	switch len(matches) {
 	case 1:
-		err := ctx.runMatchResult(matches[0])
+		err := ctx.runMatchResult(matches[0], &ranSubCmd)
 		if err != nil {
 			return err
 		}
@@ -80,20 +81,28 @@ options:
 		for _, pos := range cmd.Positionals {
 			mr := ctx.Match(pos)
 			if !mr.Matched().Ok {
-				return fmt.Errorf("%v is next but couldn't match", pos)
+				continue
+				//return fmt.Errorf("%v is next but couldn't match", pos)
 			}
-			err := ctx.runMatchResult(mr)
+			err := ctx.runMatchResult(mr, &ranSubCmd)
 			if err != nil {
 				return err
 			}
 			goto options
 		}
+		return fmt.Errorf("unhandled arg: %q", ctx.args.Pop())
 	}
-	*ctx.actions = append(*ctx.actions, cmd.AfterParse)
+	if !ranSubCmd {
+		if cmd.DefaultAction != nil {
+			*ctx.actions = append(*ctx.actions, cmd.DefaultAction)
+		} else {
+			return errors.New("no subcommand invoked and no default action")
+		}
+	}
 	return nil
 }
 
-func (ctx *context) runMatchResult(mr MatchResult) error {
+func (ctx *context) runMatchResult(mr MatchResult, ranSubCmd *bool) error {
 	ctx.args = mr.Args()
 	err := mr.Parse(ctx)
 	p := mr.Param()
@@ -106,6 +115,7 @@ func (ctx *context) runMatchResult(mr MatchResult) error {
 		if err != nil {
 			return err
 		}
+		*ranSubCmd = true
 	}
 	return nil
 }

@@ -3,8 +3,6 @@ package bargle
 import (
 	"errors"
 	"fmt"
-
-	"github.com/anacrolix/generics"
 )
 
 type UnaryOption[T any] struct {
@@ -29,12 +27,11 @@ func (me *UnaryOption[T]) switchForms() (ret []string) {
 	return
 }
 
-func (me *UnaryOption[T]) Help(f HelpFormatter) {
-	ph := ParamHelp{
-		Forms: me.switchForms(),
+func (me *UnaryOption[T]) Help() ParamHelp {
+	return ParamHelp{
+		Forms:  me.switchForms(),
+		Values: me.Unmarshaler.TargetHelp(),
 	}
-	ph.Values = me.Unmarshaler.TargetHelp()
-	f.AddOption(ph)
 }
 
 func (me *UnaryOption[T]) AddLong(long string) *UnaryOption[T] {
@@ -52,19 +49,9 @@ func (me *UnaryOption[T]) Match(args Args) MatchResult {
 }
 
 type unaryMatchResult[T any] struct {
+	baseMatchResult
 	u      UnaryUnmarshaler[T]
-	args   Args
 	target *T
-	param  Param
-	match  string
-}
-
-func (u unaryMatchResult[T]) Matched() generics.Option[string] {
-	return generics.Some(u.match)
-}
-
-func (u unaryMatchResult[T]) Args() Args {
-	return u.args
 }
 
 func (me unaryMatchResult[T]) Parse(ctx Context) error {
@@ -83,23 +70,19 @@ func (me unaryMatchResult[T]) Parse(ctx Context) error {
 	return err
 }
 
-func (u unaryMatchResult[T]) Param() Param {
-	return u.param
-}
-
 func (me *UnaryOption[T]) matchSwitch(args Args) MatchResult {
 	for _, l := range me.Longs {
 		_args := args.Clone()
 		gv := &LongParser{Long: l, CanUnary: true}
 		if gv.Match(_args) {
-			return unaryMatchResult[T]{me.Unmarshaler, _args, &me.Value, me, args.Clone().Pop()}
+			return unaryMatchResult[T]{baseMatchResult{_args, me, args.Clone().Pop()}, me.Unmarshaler, &me.Value}
 		}
 	}
 	for _, s := range me.Shorts {
 		_args := args.Clone()
 		gv := &ShortParser{Short: s, CanUnary: true}
 		if gv.Match(_args) {
-			return unaryMatchResult[T]{me.Unmarshaler, _args, &me.Value, me, args.Clone().Pop()}
+			return unaryMatchResult[T]{baseMatchResult{_args, me, args.Clone().Pop()}, me.Unmarshaler, &me.Value}
 		}
 	}
 	return noMatch

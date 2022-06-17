@@ -13,7 +13,7 @@ type Flag struct {
 	Shorts []rune
 }
 
-func (f *Flag) Help(fm HelpFormatter) {
+func (f *Flag) Help() ParamHelp {
 	ph := ParamHelp{
 		Values: "[true|1|false|0]",
 	}
@@ -23,7 +23,7 @@ func (f *Flag) Help(fm HelpFormatter) {
 	for _, s := range f.Shorts {
 		ph.Forms = append(ph.Forms, "-"+string(s), "+"+string(s))
 	}
-	fm.AddOption(ph)
+	return ph
 }
 
 func (f *Flag) AddLong(l string) *Flag {

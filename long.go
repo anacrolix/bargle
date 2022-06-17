@@ -14,14 +14,13 @@ func (me LongParser) GotValue() bool {
 	return me.gotValue
 }
 
-func (me *LongParser) Parse(ctx Context) error {
-	args := ctx.Args()
+func (me *LongParser) Match(args Args) bool {
 	if args.Len() == 0 {
-		return noMatch
+		return false
 	}
 	next := args.Pop()
 	if !strings.HasPrefix(next, "--") {
-		return noMatch
+		return false
 	}
 	before, after, found := strings.Cut(next[2:], "=")
 	me.gotValue = false
@@ -30,9 +29,9 @@ func (me *LongParser) Parse(ctx Context) error {
 		args.Push(after)
 	}
 	if before != me.Long {
-		return noMatch
+		return false
 	}
-	return nil
+	return true
 }
 
 func (me LongParser) Help(f *ParamHelp) {

@@ -1,28 +1,31 @@
 package bargle
 
 import (
-	"fmt"
+	"github.com/anacrolix/generics"
 )
 
 type Subcommand struct {
-	Commands map[string]ContextFunc
+	optionDefaults
+	Name string
+	Command
+	Desc string
 }
 
-func (me Subcommand) Help(f HelpFormatter) {
-	for name := range me.Commands {
-		f.AddCommand(name, "use bargle.Command")
-	}
-}
-
-func (me Subcommand) Parse(ctx Context) error {
-	cmd := ctx.Args().Pop()
-	defer recoverType(func(err controlError) {
-		panic(controlError{fmt.Errorf("%s: %w", cmd, err)})
-	})
-	f, ok := me.Commands[cmd]
-	if !ok {
+func (me Subcommand) Match(args Args) MatchResult {
+	if args.Len() == 0 {
 		return noMatch
 	}
-	f(ctx)
-	return nil
+	name := args.Pop()
+	if name != me.Name {
+		return noMatch
+	}
+	return matchedNoParse{
+		match: name,
+		param: me,
+		args:  args,
+	}
+}
+
+func (me Subcommand) Subcommand() generics.Option[Command] {
+	return generics.Some(me.Command)
 }

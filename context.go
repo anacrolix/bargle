@@ -1,6 +1,7 @@
 package bargle
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -33,34 +34,18 @@ func (me *context) Args() Args {
 	return me.args
 }
 
-func (ctx *context) Run(f ContextFunc) (err error) {
-	defer recoverType(func(ce controlError) {
-		err = ce
-	})
-	defer recoverType(func(success) {})
+func (ctx *context) Run(cmd Command) (err error) {
 	defer func() {
 		for i := range *ctx.deferred {
 			(*ctx.deferred)[len(*ctx.deferred)-1-i]()
 		}
 	}()
-	for {
-		again := false
-		func() {
-			defer recoverType(func(tried) {
-				again = true
-			})
-			f(ctx)
-		}()
-		if !again {
-			break
-		}
-		ctx.tried = nil
-	}
-	ctx.doHelpCommand()
-	if ctx.args.Len() > 0 {
-		ctx.implicitHelp()
-		err = unhandledErr{ctx.args.Pop()}
+	err = ctx.runCommand(cmd)
+	if err != nil {
 		return
+	}
+	if ctx.args.Len() != 0 {
+		return fmt.Errorf("%v unused args, starting with %q", ctx.args.Len(), ctx.args.Pop())
 	}
 	for _, f := range *ctx.actions {
 		err = f()
@@ -69,6 +54,60 @@ func (ctx *context) Run(f ContextFunc) (err error) {
 		}
 	}
 	return
+}
+
+func (ctx *context) runCommand(cmd Command) error {
+options:
+	matches := make([]MatchResult, 0, len(cmd.Options))
+	for _, opt := range cmd.Options {
+		mr := ctx.Match(opt)
+		if mr.Matched().Ok {
+			matches = append(matches, mr)
+		}
+	}
+	switch len(matches) {
+	case 1:
+		err := ctx.runMatchResult(matches[0])
+		if err != nil {
+			return err
+		}
+		goto options
+	default:
+		return errors.New("matched multiple options")
+	case 0:
+	}
+	if !ctx.Done() {
+		for _, pos := range cmd.Positionals {
+			mr := ctx.Match(pos)
+			if !mr.Matched().Ok {
+				return fmt.Errorf("%v is next but couldn't match", pos)
+			}
+			err := ctx.runMatchResult(mr)
+			if err != nil {
+				return err
+			}
+			goto options
+		}
+	}
+	*ctx.actions = append(*ctx.actions, cmd.AfterParse)
+	return nil
+}
+
+func (ctx *context) runMatchResult(mr MatchResult) error {
+	ctx.args = mr.Args()
+	err := mr.Parse(ctx)
+	p := mr.Param()
+	if err != nil {
+		return fmt.Errorf("parsing %q: %w", mr.Matched().Unwrap(), err)
+	}
+	sub := p.Subcommand()
+	if sub.Ok {
+		err := ctx.runCommand(sub.Value)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (ctx *context) doHelpCommand() {
@@ -80,80 +119,8 @@ func (ctx *context) doHelpCommand() {
 	}
 }
 
-func (me *context) implicitHelp() bool {
-	if me.Helping() {
-		return false
-	}
-	help := Help{}
-	help.AddParams(me.tried...)
-	return me.matchAddTry(&help, false)
-}
-
-func (me *context) addTry(p Parser) {
-	if ph, ok := p.(ParamHelper); ok {
-		me.tried = append(me.tried, ph)
-	}
-}
-
-func (me *context) Parse(p Parser) {
-	args := me.args.Clone()
-	me.addTry(p)
-	if me.Helping() {
-		return
-	}
-	err := p.Parse(me)
-	if err == noMatch {
-		if me.implicitHelp() {
-			return
-		}
-	}
-	if err != nil {
-		var arg generics.Option[string]
-		if args.Len() != 0 {
-			arg.Set(args.Pop())
-		}
-		panic(controlError{parseError{
-			inner: err,
-			arg:   arg,
-			param: p,
-		}})
-	}
-}
-
-func (me *context) matchAddTry(p Parser, addTry bool) bool {
-	args := me.args.Clone()
-	if addTry {
-		me.addTry(p)
-	}
-	err := p.Parse(me)
-	switch err {
-	case noMatch:
-		me.args = args
-		return false
-	case nil:
-		return true
-	default:
-		panic(controlError{err})
-	}
-}
-
-func (me *context) Match(p Parser) bool {
-	return me.matchAddTry(p, true)
-}
-
-func (me *context) MustParseOne(params ...Parser) {
-	for _, p := range params {
-		if me.Match(p) /*&& !me.Helping()*/ {
-			return
-		}
-	}
-	if me.Helping() {
-		return
-	}
-	if me.implicitHelp() {
-		return
-	}
-	me.Unhandled()
+func (me *context) Match(m Matcher) (ret MatchResult) {
+	return m.Match(me.args.Clone())
 }
 
 func (me *context) Done() bool {
@@ -179,32 +146,12 @@ func (me *context) Fail(err error) {
 	panic(controlError{userError(err)})
 }
 
-func (me *context) ParseUntilDone(ps ...Parser) {
-start:
-	for _, p := range ps {
-		if me.Match(p) {
-			goto start
-		}
-	}
-	me.implicitHelp()
-	if me.Helping() {
-		return
-	}
-	me.Unhandled()
-}
-
 func (me *context) MissingArgument(name string) {
 	me.Fail(fmt.Errorf("missing argument: %s", name))
 }
 
 func (me *context) Success() {
 	panic(success{})
-}
-
-func (me *context) Try(p Parser) {
-	if me.Match(p) {
-		panic(tried{})
-	}
 }
 
 // Returns whether the next arg can be parsed as positional. This could allow to handle -- and drop

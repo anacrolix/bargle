@@ -4,11 +4,7 @@ type Parser interface {
 	Parse(ctx Context) error
 }
 
-type ParamParser interface {
-	Parser
-	ParamHelper
-}
-
-type Param interface {
-	Parser
+type Matcher interface {
+	// Should this allow a nil return for no match?
+	Match(args Args) MatchResult
 }

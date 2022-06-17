@@ -1,10 +1,14 @@
 package bargle
 
 import (
+	"errors"
 	"fmt"
+
+	"github.com/anacrolix/generics"
 )
 
 type UnaryOption[T any] struct {
+	optionDefaults
 	Value       T
 	Unmarshaler UnaryUnmarshaler[T]
 	Longs       []string
@@ -43,31 +47,60 @@ func (me *UnaryOption[T]) AddShort(short rune) *UnaryOption[T] {
 	return me
 }
 
-func (me *UnaryOption[T]) Parse(ctx Context) error {
-	if !me.matchSwitch(ctx) {
-		return noMatch
+func (me *UnaryOption[T]) Match(args Args) MatchResult {
+	return me.matchSwitch(args)
+}
+
+type unaryMatchResult[T any] struct {
+	u      UnaryUnmarshaler[T]
+	args   Args
+	target *T
+	param  Param
+	match  string
+}
+
+func (u unaryMatchResult[T]) Matched() generics.Option[string] {
+	return generics.Some(u.match)
+}
+
+func (u unaryMatchResult[T]) Args() Args {
+	return u.args
+}
+
+func (me unaryMatchResult[T]) Parse(ctx Context) error {
+	args := ctx.Args()
+	if args.Len() == 0 {
+		return missingArgument
 	}
 	arg := ctx.Args().Pop()
-	if me.Unmarshaler == nil {
-		return fmt.Errorf("unary option %s has no unmarshaler", me.switchForms())
+	if me.u == nil {
+		return errors.New("no unmarshaler set")
 	}
-	err := me.Unmarshaler.UnaryUnmarshal(arg, &me.Value)
+	err := me.u.UnaryUnmarshal(arg, me.target)
 	if err != nil {
 		err = fmt.Errorf("unmarshalling %q: %w", arg, err)
 	}
 	return err
 }
 
-func (me UnaryOption[T]) matchSwitch(ctx Context) bool {
+func (u unaryMatchResult[T]) Param() Param {
+	return u.param
+}
+
+func (me *UnaryOption[T]) matchSwitch(args Args) MatchResult {
 	for _, l := range me.Longs {
-		if ctx.Match(&LongParser{Long: l, CanUnary: true}) {
-			return true
+		_args := args.Clone()
+		gv := &LongParser{Long: l, CanUnary: true}
+		if gv.Match(_args) {
+			return unaryMatchResult[T]{me.Unmarshaler, _args, &me.Value, me, args.Clone().Pop()}
 		}
 	}
 	for _, s := range me.Shorts {
-		if ctx.Match(&ShortParser{Short: s, CanUnary: true}) {
-			return true
+		_args := args.Clone()
+		gv := &ShortParser{Short: s, CanUnary: true}
+		if gv.Match(_args) {
+			return unaryMatchResult[T]{me.Unmarshaler, _args, &me.Value, me, args.Clone().Pop()}
 		}
 	}
-	return false
+	return noMatch
 }

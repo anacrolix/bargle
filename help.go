@@ -19,23 +19,13 @@ type FormHelper interface {
 }
 
 func (me Help) matchers() []interface {
-	Parser
+	//Matcher
 	FormHelper
 } {
 	return []interface {
-		Parser
+		//Matcher
 		FormHelper
 	}{&LongParser{Long: "help"}, &ShortParser{Short: 'h'}}
-}
-
-func (me *Help) Parse(ctx Context) error {
-	for _, m := range me.matchers() {
-		if ctx.Match(m) {
-			ctx.StartHelping()
-			return nil
-		}
-	}
-	return noMatch
 }
 
 type ParamHelp struct {

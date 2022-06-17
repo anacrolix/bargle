@@ -11,28 +11,27 @@ func (me ShortParser) GotValue() bool {
 	return me.gotValue
 }
 
-func (me *ShortParser) Parse(ctx Context) error {
-	args := ctx.Args()
+func (me *ShortParser) Match(args Args) bool {
 	if args.Len() == 0 {
-		return noMatch
+		return false
 	}
 	next := []rune(args.Pop())
 	if len(next) < 2 {
-		return noMatch
+		return false
 	}
 	if me.Prefix == 0 {
 		me.Prefix = '-'
 	}
 	if next[0] != me.Prefix {
-		return noMatch
+		return false
 	}
 	if next[1] != me.Short {
-		return noMatch
+		return false
 	}
 	me.gotValue = false
 	next = next[2:]
 	if len(next) == 0 {
-		return nil
+		return false
 	}
 	if me.CanUnary {
 		if next[0] == '=' {
@@ -43,7 +42,7 @@ func (me *ShortParser) Parse(ctx Context) error {
 	} else {
 		args.Push(string(append([]rune{me.Prefix}, next...)))
 	}
-	return nil
+	return true
 }
 
 func (me ShortParser) Help(f *ParamHelp) {

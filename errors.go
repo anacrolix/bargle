@@ -7,8 +7,6 @@ import (
 	"github.com/anacrolix/generics"
 )
 
-var noMatch = errors.New("no match")
-
 type unhandledErr struct {
 	arg string
 }

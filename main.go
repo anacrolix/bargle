@@ -9,15 +9,16 @@ import (
 type Main struct {
 	OnError  func(err error)
 	deferred []func()
+	Command
 }
 
 func (me *Main) Defer(f func()) {
 	me.deferred = append(me.deferred, f)
 }
 
-func (me *Main) Run(f ContextFunc) {
+func (me *Main) Run() {
 	ctx := NewContext(os.Args[1:])
-	err := ctx.Run(f)
+	err := ctx.Run(me.Command)
 	if err != nil {
 		if me.OnError != nil {
 			me.OnError(err)

@@ -2,9 +2,12 @@ package bargle
 
 import (
 	"strconv"
+
+	"github.com/anacrolix/generics"
 )
 
 type Flag struct {
+	optionDefaults
 	Value  bool
 	Longs  []string
 	Shorts []rune
@@ -33,37 +36,77 @@ func (f *Flag) AddShort(s rune) *Flag {
 	return f
 }
 
-func (f *Flag) parseValue(no bool, us UnarySwitch, ctx Context) (err error) {
+func (f *Flag) matchResult(no bool, us UnarySwitch, args Args) MatchResult {
+	mr := flagMatchResult{
+		args:   args,
+		target: &f.Value,
+		no:     no,
+	}
 	if us.GotValue() {
-		f.Value, err = strconv.ParseBool(ctx.Args().Pop())
-	} else {
-		f.Value = true
+		mr.value = generics.Some(args.Pop())
 	}
-	if no {
-		f.Value = !f.Value
-	}
-	return
+	return mr
 }
 
-func (f *Flag) Parse(ctx Context) (err error) {
+type flagMatchResult struct {
+	matched string
+	args    Args
+	value   generics.Option[string]
+	target  *bool
+	no      bool
+}
+
+func (f flagMatchResult) Matched() generics.Option[string] {
+	return generics.Some(f.matched)
+}
+
+func (f flagMatchResult) Args() Args {
+	return f.args
+}
+
+func (f flagMatchResult) Parse(ctx Context) (err error) {
+	if f.value.Ok {
+		*f.target, err = strconv.ParseBool(f.value.Value)
+	} else {
+		*f.target = true
+	}
+	if f.no {
+		*f.target = !*f.target
+	}
+	return
+
+}
+
+func (f flagMatchResult) Param() Param {
+	//TODO implement me
+	panic("implement me")
+}
+
+var _ MatchResult = flagMatchResult{}
+
+func (f *Flag) Match(args Args) (mr MatchResult) {
 	for _, l := range f.Longs {
+		_args := args.Clone()
 		p := LongParser{Long: l, CanUnary: true}
-		if ctx.Match(&p) {
-			return f.parseValue(false, p, ctx)
+		if p.Match(_args) {
+			return f.matchResult(false, p, _args)
 		}
+		_args = args.Clone()
 		p.Long = "no-" + l
-		if ctx.Match(&p) {
-			return f.parseValue(true, p, ctx)
+		if p.Match(_args) {
+			return f.matchResult(true, p, _args)
 		}
 	}
 	for _, l := range f.Shorts {
+		_args := args.Clone()
 		p := ShortParser{Short: l, CanUnary: true}
-		if ctx.Match(&p) {
-			return f.parseValue(false, p, ctx)
+		if p.Match(_args) {
+			return f.matchResult(false, p, _args)
 		}
+		_args = args.Clone()
 		p.Prefix = '+'
-		if ctx.Match(&p) {
-			return f.parseValue(true, p, ctx)
+		if p.Match(_args) {
+			return f.matchResult(true, p, _args)
 		}
 	}
 	return noMatch

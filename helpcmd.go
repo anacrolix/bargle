@@ -1,20 +1,20 @@
 package bargle
 
 type HelpCommand struct {
+	optionDefaults
 }
 
-func (h HelpCommand) Parse(ctx Context) error {
-	if ctx.Helping() {
+func (h HelpCommand) Match(args Args) MatchResult {
+	if args.Len() == 0 {
 		return noMatch
 	}
-	if ctx.Args().Len() == 0 {
+	if args.Pop() != "help" {
 		return noMatch
 	}
-	if ctx.Args().Pop() != "help" {
-		return noMatch
+	return matchedNoParse{
+		param: h,
+		args:  args,
 	}
-	ctx.StartHelping()
-	return nil
 }
 
-var _ Parser = HelpCommand{}
+//var _ Parser = HelpCommand{}

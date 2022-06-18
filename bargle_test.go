@@ -17,17 +17,16 @@ func TestParseFlagNoArgs(t *testing.T) {
 	ctx := NewContext(nil)
 	f := Flag{}
 	f.AddLong("debug").AddShort('s')
-	err := ctx.Run(func(ctx Context) {
-		ctx.Try(&f)
-	})
+	err := ctx.Run(Command{Options: []Param{&f}, DefaultAction: func() error {
+		// Do nothing? Hm...
+		return nil
+	}})
 	qt.Assert(t, err, qt.IsNil)
 }
 
 func TestUnhandledExitCode(t *testing.T) {
 	ctx := NewContext([]string{"unhandled"})
-	err := ctx.Run(func(ctx Context) {
-		ctx.Unhandled()
-	})
+	err := ctx.Run(Command{})
 	var exitCoder ExitCoder
 	c := qt.New(t)
 	c.Assert(err, qt.ErrorAs, &exitCoder)
@@ -36,9 +35,7 @@ func TestUnhandledExitCode(t *testing.T) {
 
 func TestParseFailExitCode(t *testing.T) {
 	ctx := NewContext([]string{"unhandled"})
-	err := ctx.Run(func(ctx Context) {
-		ctx.Parse(Command{})
-	})
+	err := ctx.Run(Command{Positionals: []Param{Subcommand{}}})
 	//errorSpewConfig.Dump(err)
 	var exitCoder ExitCoder
 	c := qt.New(t)

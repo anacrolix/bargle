@@ -6,6 +6,8 @@ import (
 	"github.com/anacrolix/generics"
 )
 
+// A flag is an optional argument that results in a boolean value. It has a negative form, and can
+// parse from a bound value in the same argument (with '=').
 type Flag struct {
 	optionDefaults
 	Value  bool

@@ -4,28 +4,31 @@ import (
 	"github.com/anacrolix/generics"
 )
 
+type AfterParseParamFunc func(ctx Context) error
+
 type Param interface {
 	Satisfied() bool
 	Matcher
 	Subcommand() generics.Option[Command]
 	Help() ParamHelp
+	AfterParse(ctx Context) error
 }
 
 type paramDefaults struct{}
 
-func (p paramDefaults) Parse(ctx Context) error {
-	return nil
+func (paramDefaults) Subcommand() (_ generics.Option[Command]) {
+	return
 }
 
-func (p paramDefaults) Subcommand() (_ generics.Option[Command]) {
-	return
+func (paramDefaults) AfterParse(Context) error {
+	return nil
 }
 
 type optionDefaults struct {
 	paramDefaults
 }
 
-func (o optionDefaults) Satisfied() bool {
+func (optionDefaults) Satisfied() bool {
 	return true
 }
 
@@ -33,6 +36,6 @@ type posDefaults struct {
 	paramDefaults
 }
 
-func (p posDefaults) Satisfied() bool {
+func (posDefaults) Satisfied() bool {
 	return false
 }

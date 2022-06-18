@@ -12,7 +12,7 @@ type context struct {
 	args     Args
 	actions  *[]func() error
 	deferred *[]func()
-	helping  bool
+	exitCode generics.Option[int]
 }
 
 type Context = *context
@@ -54,15 +54,35 @@ func (ctx *context) Run(cmd Command) (err error) {
 	return
 }
 
+func (ctx *context) tryAppendMatch(matches *[]MatchResult, p Param) {
+	mr := ctx.Match(p)
+	if mr.Matched().Ok {
+		*matches = append(*matches, mr)
+	}
+}
+
 func (ctx *context) runCommand(cmd Command) error {
 	ranSubCmd := false
 options:
+	if ctx.exitCode.Ok {
+		return nil
+	}
 	matches := make([]MatchResult, 0, len(cmd.Options))
 	for _, opt := range cmd.Options {
-		mr := ctx.Match(opt)
-		if mr.Matched().Ok {
-			matches = append(matches, mr)
-		}
+		ctx.tryAppendMatch(&matches, opt)
+	}
+	if len(matches) == 0 {
+		// We only try this if an existing option in the Command hasn't already matched.
+		ctx.tryAppendMatch(&matches, Switch{
+			Longs:  []string{"help"},
+			Shorts: []rune{'h'},
+			Desc:   "help/usage",
+			AfterParseFunc: func(ctx Context) error {
+				printCommandHelp(cmd.Help(), false)
+				ctx.Success()
+				return nil
+			},
+		})
 	}
 	switch len(matches) {
 	case 1:
@@ -101,11 +121,18 @@ options:
 }
 
 func (ctx *context) runMatchResult(mr MatchResult, ranSubCmd *bool) error {
+	// To get here we should have checked that Matched is Ok. Let's unwrap anyway to assert that
+	// behaviour.
+	matchedArg := mr.Matched().Unwrap()
 	ctx.args = mr.Args()
 	err := mr.Parse(ctx)
 	p := mr.Param()
 	if err != nil {
-		return fmt.Errorf("parsing %q: %w", mr.Matched().Unwrap(), err)
+		return fmt.Errorf("parsing %q: %w", matchedArg, err)
+	}
+	err = p.AfterParse(ctx)
+	if err != nil {
+		return fmt.Errorf("running after parse for %q: %w", matchedArg, err)
 	}
 	sub := p.Subcommand()
 	if sub.Ok {
@@ -150,7 +177,7 @@ func (me *context) MissingArgument(name string) {
 }
 
 func (me *context) Success() {
-	panic(success{})
+	me.exitCode = generics.Some(0)
 }
 
 // Returns whether the next arg can be parsed as positional. This could allow to handle -- and drop
@@ -164,12 +191,4 @@ func (me *context) MatchPos() bool {
 		return false
 	}
 	return true
-}
-
-func (me *context) Helping() bool {
-	return me.helping
-}
-
-func (me *context) StartHelping() {
-	me.helping = true
 }

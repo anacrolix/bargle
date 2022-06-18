@@ -39,18 +39,18 @@ func (me HelpCommand) AddToCommand(cmd *Command) {
 		Shorts: []rune{'r'},
 	}
 	sub.Options = append(sub.Options, recurse)
-	addHelpSubcommands(&sub, *cmd, &recurse.Value)
-	cmd.Positionals = append(cmd.Positionals, sub)
+	cmd.Positionals = append(cmd.Positionals, &sub)
+	addHelpSubcommands(&sub, cmd, &recurse.Value)
 }
 
-func addHelpSubcommands(to *Subcommand, from Command, recurse *bool) {
+func addHelpSubcommands(to *Subcommand, from *Command, recurse *bool) {
 	for _, pos := range from.Positionals {
 		fromSub := pos.Subcommand()
 		if fromSub.Ok {
 			toSub := Subcommand{
 				Name: pos.Help().Forms[0],
 			}
-			addHelpSubcommands(&toSub, fromSub.Value, recurse)
+			addHelpSubcommands(&toSub, &fromSub.Value, recurse)
 			//toSub.DefaultAction = helpCommandAction(&fromSub.Value)
 			to.Positionals = append(to.Positionals, toSub)
 		}
@@ -58,7 +58,7 @@ func addHelpSubcommands(to *Subcommand, from Command, recurse *bool) {
 	to.DefaultAction = helpCommandAction(from, recurse)
 }
 
-func helpCommandAction(cmd Command, recurse *bool) func() error {
+func helpCommandAction(cmd *Command, recurse *bool) func() error {
 	return func() error {
 		var hf commandHelp
 		formatCommandHelp(&hf, cmd)
@@ -67,14 +67,15 @@ func helpCommandAction(cmd Command, recurse *bool) func() error {
 	}
 }
 
-func formatCommandHelp(hf *commandHelp, cmd Command) {
+func formatCommandHelp(hf *commandHelp, cmd *Command) {
 	for _, p := range cmd.Options {
 		hf.AddOption(p.Help())
 	}
 	for _, p := range cmd.Positionals {
-		if p.Subcommand().Ok {
+		subCmd := p.Subcommand()
+		if subCmd.Ok {
 			cmdHelp := p.Help()
-			formatCommandHelp(&cmdHelp.Subcommand, p.Subcommand().Value)
+			formatCommandHelp(&cmdHelp.Subcommand, &subCmd.Value)
 			hf.AddCommand(cmdHelp)
 		} else {
 			hf.AddPositional(p.Help())

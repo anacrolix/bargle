@@ -66,3 +66,19 @@ func (me parseError) Error() string {
 }
 
 var missingArgument = errors.New("missing argument")
+
+type exitCodeErrorWrapper struct {
+	error
+	exitCode int
+}
+
+func (me exitCodeErrorWrapper) ExitCode() int {
+	return me.exitCode
+}
+
+func withExitCode(exitCode int, err error) error {
+	return exitCodeErrorWrapper{
+		error:    err,
+		exitCode: exitCode,
+	}
+}

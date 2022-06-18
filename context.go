@@ -40,7 +40,7 @@ func (ctx *context) Run(cmd Command) (err error) {
 	}()
 	err = ctx.runCommand(cmd)
 	if err != nil {
-		return
+		return withExitCode(2, err)
 	}
 	if ctx.args.Len() != 0 {
 		return fmt.Errorf("%v unused args, starting with %q", ctx.args.Len(), ctx.args.Pop())
@@ -191,4 +191,8 @@ func (me *context) MatchPos() bool {
 		return false
 	}
 	return true
+}
+
+func (me *context) ExitCode() int {
+	return me.exitCode.UnwrapOr(0)
 }

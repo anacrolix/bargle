@@ -58,29 +58,13 @@ func addHelpSubcommands(to *Subcommand, from *Command, recurse *bool) {
 	to.DefaultAction = helpCommandAction(from, recurse)
 }
 
+func printCommandHelp(ch commandHelp, recurse bool) {
+	helpFormatter{recurse}.Write(os.Stdout, ch)
+}
+
 func helpCommandAction(cmd *Command, recurse *bool) func() error {
 	return func() error {
-		var hf commandHelp
-		formatCommandHelp(&hf, cmd)
-		helpFormatter{*recurse}.Write(os.Stdout, hf)
+		printCommandHelp(cmd.Help(), *recurse)
 		return nil
 	}
 }
-
-func formatCommandHelp(hf *commandHelp, cmd *Command) {
-	for _, p := range cmd.Options {
-		hf.AddOption(p.Help())
-	}
-	for _, p := range cmd.Positionals {
-		subCmd := p.Subcommand()
-		if subCmd.Ok {
-			cmdHelp := p.Help()
-			formatCommandHelp(&cmdHelp.Subcommand, &subCmd.Value)
-			hf.AddCommand(cmdHelp)
-		} else {
-			hf.AddPositional(p.Help())
-		}
-	}
-}
-
-//var _ Parser = HelpCommand{}

@@ -19,3 +19,20 @@ func (me Command) HasSubcommands() bool {
 	}
 	return false
 }
+
+func (cmd Command) Help() (hf commandHelp) {
+	for _, p := range cmd.Options {
+		hf.AddOption(p.Help())
+	}
+	for _, p := range cmd.Positionals {
+		subCmd := p.Subcommand()
+		if subCmd.Ok {
+			cmdHelp := p.Help()
+			cmdHelp.Subcommand = subCmd.Value.Help()
+			hf.AddCommand(cmdHelp)
+		} else {
+			hf.AddPositional(p.Help())
+		}
+	}
+	return
+}

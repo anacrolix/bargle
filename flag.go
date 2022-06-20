@@ -15,12 +15,12 @@ type Flag struct {
 	Shorts []rune
 }
 
-func (f *Flag) Parse(args Args) (err error) {
+func (f Flag) Parse(args Args) (err error) {
 	*f.Value, err = strconv.ParseBool(args.Pop())
 	return
 }
 
-func (f *Flag) Help() ParamHelp {
+func (f Flag) Help() ParamHelp {
 	ph := ParamHelp{
 		Values: "[true|1|false|0]",
 	}
@@ -81,7 +81,7 @@ func (f flagMatchResult) Parse(Args) (err error) {
 
 var _ MatchResult = flagMatchResult{}
 
-func (f *Flag) Match(args Args) (mr MatchResult) {
+func (f Flag) Match(args Args) (mr MatchResult) {
 	for _, l := range f.Longs {
 		_args := args.Clone()
 		p := LongParser{Long: l, CanUnary: true}

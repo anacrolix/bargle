@@ -25,7 +25,7 @@ func FromStruct(target interface{}) (cmd Command) {
 			param = &Positional[any]{
 				Name:  fmt.Sprintf("%v.%v", type_.Name(), structField.Name),
 				Desc:  structField.Tag.Get("help"),
-				Value: &target,
+				Value: target,
 				U:     mustGetUnaryUnmarshaler(targetReflectType),
 			}
 			cmd.Positionals = append(cmd.Positionals, param)
@@ -40,7 +40,7 @@ func FromStruct(target interface{}) (cmd Command) {
 				cmd.Options = append(cmd.Options)
 			default:
 				option := &UnaryOption[any]{
-					Value:       &target,
+					Value:       target,
 					Unmarshaler: mustGetUnaryUnmarshaler(targetReflectType),
 					Longs:       longs,
 				}

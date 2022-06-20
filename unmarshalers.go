@@ -10,7 +10,7 @@ import (
 )
 
 type UnaryUnmarshaler[T any] interface {
-	UnaryUnmarshal(s string, t *T) error
+	UnaryUnmarshal(s string, t T) error
 	TargetHelp() string
 }
 
@@ -56,21 +56,11 @@ type Unmarshaler[T any] interface {
 }
 
 type Slice[T any] struct {
-	Unmarshaler interface {
-		UnaryUnmarshaler[T]
-		TargetHelper
-	}
+	Unmarshaler UnaryUnmarshaler[*T]
 }
 
 func (s2 Slice[T]) TargetHelp() string {
 	return s2.Unmarshaler.TargetHelp() + "..."
-}
-
-func NewSlice[T any](u interface {
-	UnaryUnmarshaler[T]
-	TargetHelper
-}) Slice[T] {
-	return Slice[T]{Unmarshaler: u}
 }
 
 func (sl Slice[T]) UnaryUnmarshal(s string, slice *[]T) error {
@@ -85,7 +75,7 @@ func (sl Slice[T]) UnaryUnmarshal(s string, slice *[]T) error {
 
 type String struct{}
 
-var _ UnaryUnmarshaler[string] = String{}
+var _ UnaryUnmarshaler[*string] = String{}
 
 func (s2 String) TargetHelp() string {
 	return "(string)"
@@ -106,7 +96,7 @@ func NewString() *String {
 }
 
 // Does a unary unmarshal, trying to infer a default unmarshaler if necessary.
-func doUnaryUnmarshal[T any](s string, t *T, u UnaryUnmarshaler[T]) error {
+func doUnaryUnmarshal[T any](s string, t T, u UnaryUnmarshaler[T]) error {
 	if u != nil {
 		return u.UnaryUnmarshal(s, t)
 	}
@@ -117,7 +107,7 @@ func doUnaryUnmarshal[T any](s string, t *T, u UnaryUnmarshaler[T]) error {
 	case *string:
 		return String{}.UnaryUnmarshal(s, p)
 	default:
-		panic(fmt.Sprintf("unhandled default unary unmarshaler type %T", *t))
+		panic(fmt.Sprintf("unhandled default unary unmarshaler type %T", t))
 	}
 }
 
@@ -178,7 +168,7 @@ type anyUnaryUnmarshalerFunc struct {
 	help string
 }
 
-func (me anyUnaryUnmarshalerFunc) UnaryUnmarshal(s string, a *any) error {
+func (me anyUnaryUnmarshalerFunc) UnaryUnmarshal(s string, a any) error {
 	return me.u(s, a)
 }
 
@@ -192,6 +182,6 @@ type unaryUnmarshalerAnyWrapper[T any] struct {
 	UnaryUnmarshaler[T]
 }
 
-func (me unaryUnmarshalerAnyWrapper[T]) UnaryUnmarshal(s string, t *any) error {
-	return me.UnaryUnmarshaler.UnaryUnmarshal(s, (*t).(*T))
+func (me unaryUnmarshalerAnyWrapper[T]) UnaryUnmarshal(s string, t any) error {
+	return me.UnaryUnmarshaler.UnaryUnmarshal(s, (t).(T))
 }

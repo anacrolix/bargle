@@ -6,7 +6,7 @@ import (
 
 type Positional[T any] struct {
 	posDefaults
-	Value          *T
+	Value          T
 	U              UnaryUnmarshaler[T]
 	Name           string
 	Desc           string

@@ -5,7 +5,7 @@ import (
 )
 
 type Option[T any] struct {
-	u UnaryUnmarshaler[T]
+	u UnaryUnmarshaler[*T]
 }
 
 func (o Option[T]) UnaryUnmarshal(s string, t *generics.Option[T]) error {
@@ -30,6 +30,6 @@ func (o Option[T]) TargetHelp() string {
 //	return nil
 //}
 
-func NewOption[T any](u UnaryUnmarshaler[T]) *Option[T] {
+func NewOption[T any](u UnaryUnmarshaler[*T]) *Option[T] {
 	return &Option[T]{u: u}
 }

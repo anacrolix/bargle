@@ -6,16 +6,12 @@ import (
 
 type UnaryOption[T any] struct {
 	optionDefaults
-	Value       *T
+	Value       T
 	Unmarshaler UnaryUnmarshaler[T]
 	Longs       []string
 	Shorts      []rune
 	Required    bool
 	parsed      bool
-}
-
-func NewUnaryOption[T builtinUnaryUnmarshalTarget](target *T) *UnaryOption[T] {
-	return &UnaryOption[T]{Unmarshaler: BuiltinUnaryUnmarshaler[T]{}}
 }
 
 func (me *UnaryOption[T]) switchForms() (ret []string) {
@@ -61,7 +57,7 @@ func (me *UnaryOption[T]) Match(args Args) MatchResult {
 type unaryMatchResult[T any] struct {
 	baseMatchResult
 	u      UnaryUnmarshaler[T]
-	target *T
+	target T
 }
 
 func (me unaryMatchResult[T]) Parse(args Args) error {

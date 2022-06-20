@@ -97,10 +97,9 @@ options:
 	}
 	if !ctx.Done() {
 		for _, pos := range cmd.Positionals {
-			mr := ctx.Match(pos)
+			mr := ctx.MatchPos(pos)
 			if !mr.Matched().Ok {
 				continue
-				//return fmt.Errorf("%v is next but couldn't match", pos)
 			}
 			err := ctx.runMatchResult(mr, &ranSubCmd)
 			if err != nil {
@@ -182,15 +181,15 @@ func (me *context) Success() {
 
 // Returns whether the next arg can be parsed as positional. This could allow to handle -- and drop
 // into positional only arguments.
-func (me *context) MatchPos() bool {
+func (me *context) MatchPos(p Param) MatchResult {
 	if me.args.Len() == 0 {
-		return true
+		return noMatch
 	}
 	args := me.args.Clone()
 	if strings.HasPrefix(args.Pop(), "-") {
-		return false
+		return noMatch
 	}
-	return true
+	return me.Match(p)
 }
 
 func (me *context) ExitCode() int {

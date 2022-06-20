@@ -39,6 +39,10 @@ func (ctx *context) Run(cmd Command) (err error) {
 			(*ctx.deferred)[len(*ctx.deferred)-1-i]()
 		}
 	}()
+	err = cmd.Init()
+	if err != nil {
+		return fmt.Errorf("initing command: %w", err)
+	}
 	err = ctx.runCommand(cmd)
 	if err != nil {
 		return withExitCode(2, err)

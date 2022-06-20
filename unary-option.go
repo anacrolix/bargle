@@ -6,7 +6,7 @@ import (
 
 type UnaryOption[T any] struct {
 	optionDefaults
-	Value       T
+	Value       *T
 	Unmarshaler UnaryUnmarshaler[T]
 	Longs       []string
 	Shorts      []rune
@@ -81,19 +81,19 @@ func (me *UnaryOption[T]) matchSwitch(args Args) MatchResult {
 		_args := args.Clone()
 		gv := &LongParser{Long: l, CanUnary: true}
 		if gv.Match(_args) {
-			return unaryMatchResult[T]{baseMatchResult{_args, me, args.Clone().Pop()}, me.Unmarshaler, &me.Value}
+			return unaryMatchResult[T]{baseMatchResult{_args, me, args.Clone().Pop()}, me.Unmarshaler, me.Value}
 		}
 	}
 	for _, s := range me.Shorts {
 		_args := args.Clone()
 		gv := &ShortParser{Short: s, CanUnary: true}
 		if gv.Match(_args) {
-			return unaryMatchResult[T]{baseMatchResult{_args, me, args.Clone().Pop()}, me.Unmarshaler, &me.Value}
+			return unaryMatchResult[T]{baseMatchResult{_args, me, args.Clone().Pop()}, me.Unmarshaler, me.Value}
 		}
 	}
 	return noMatch
 }
 
 func (me *UnaryOption[T]) Parse(args Args) error {
-	return doUnaryUnmarshal(args.Pop(), &me.Value, me.Unmarshaler)
+	return doUnaryUnmarshal(args.Pop(), me.Value, me.Unmarshaler)
 }

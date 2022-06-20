@@ -3,6 +3,7 @@ package bargle
 import (
 	"encoding"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	"golang.org/x/exp/constraints"
@@ -118,4 +119,79 @@ func doUnaryUnmarshal[T any](s string, t *T, u UnaryUnmarshaler[T]) error {
 	default:
 		panic(fmt.Sprintf("unhandled default unary unmarshaler type %T", *t))
 	}
+}
+
+// Does a unary unmarshal, trying to infer a default unmarshaler if necessary.
+func mustGetUnaryUnmarshaler(target reflect.Type) anyUnaryUnmarshaler {
+	return anyUnaryUnmarshalerFunc{
+		u: mustGetUnaryUnmarshalAnyFunc(target),
+		// TODO: Collapse pointers that get allocated automatically for this type. Pass through some
+		// nice examples for builtins when/if they are added.
+		help: fmt.Sprintf("(%v)", target.String()),
+	}
+}
+
+// Does a unary unmarshal, trying to infer a default unmarshaler if necessary.
+func mustGetUnaryUnmarshalAnyFunc(target reflect.Type) func(string, any) error {
+	if target.Implements(reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()) {
+		return func(s string, a any) error {
+			return a.(encoding.TextUnmarshaler).UnmarshalText([]byte(s))
+		}
+	}
+	switch target.Elem().Kind() {
+	case reflect.Slice:
+		eu := mustGetUnaryUnmarshalAnyFunc(reflect.PtrTo(target.Elem().Elem()))
+		return func(s string, a any) error {
+			ev := reflect.New(target.Elem().Elem())
+			err := eu(s, ev.Interface())
+			if err != nil {
+				return err
+			}
+			slice := reflect.ValueOf(a).Elem()
+			slice.Set(reflect.Append(slice, ev.Elem()))
+			return nil
+		}
+	case reflect.String:
+		return func(s string, a any) error {
+			*a.(*string) = s
+			return nil
+		}
+	case reflect.Ptr:
+		uf := mustGetUnaryUnmarshalAnyFunc(target.Elem())
+		return func(s string, a any) error {
+			ev := reflect.New(target.Elem())
+			err := uf(s, ev.Interface())
+			if err != nil {
+				return err
+			}
+			reflect.ValueOf(a).Elem().Set(ev)
+			return nil
+		}
+	default:
+		panic(fmt.Errorf("unhandled unary unmarshaler reflection type: %v", target))
+	}
+
+}
+
+type anyUnaryUnmarshalerFunc struct {
+	u    func(string, any) error
+	help string
+}
+
+func (me anyUnaryUnmarshalerFunc) UnaryUnmarshal(s string, a *any) error {
+	return me.u(s, a)
+}
+
+func (me anyUnaryUnmarshalerFunc) TargetHelp() string {
+	return me.help
+}
+
+type anyUnaryUnmarshaler = UnaryUnmarshaler[any]
+
+type unaryUnmarshalerAnyWrapper[T any] struct {
+	UnaryUnmarshaler[T]
+}
+
+func (me unaryUnmarshalerAnyWrapper[T]) UnaryUnmarshal(s string, t *any) error {
+	return me.UnaryUnmarshaler.UnaryUnmarshal(s, (*t).(*T))
 }

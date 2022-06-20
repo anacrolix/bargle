@@ -12,6 +12,7 @@ func FromStruct(target interface{}) (cmd Command) {
 	type_ := value.Type()
 	for i := 0; i < value.NumField(); i++ {
 		fieldValue := value.Field(i)
+		targetReflectType := fieldValue.Addr().Type()
 		target := fieldValue.Addr().Interface()
 		structField := type_.Field(i)
 		argTag := structField.Tag.Get("arg")
@@ -25,6 +26,7 @@ func FromStruct(target interface{}) (cmd Command) {
 				Name:  fmt.Sprintf("%v.%v", type_.Name(), structField.Name),
 				Desc:  structField.Tag.Get("help"),
 				Value: &target,
+				U:     mustGetUnaryUnmarshaler(targetReflectType),
 			}
 			cmd.Positionals = append(cmd.Positionals, param)
 		} else {
@@ -32,13 +34,16 @@ func FromStruct(target interface{}) (cmd Command) {
 			switch typedTarget := target.(type) {
 			case *bool:
 				param = &Flag{
-					optionDefaults: optionDefaults{},
-					Value:          typedTarget,
-					Longs:          longs,
+					Value: typedTarget,
+					Longs: longs,
 				}
 				cmd.Options = append(cmd.Options)
 			default:
-				option := &UnaryOption[any]{}
+				option := &UnaryOption[any]{
+					Value:       &target,
+					Unmarshaler: mustGetUnaryUnmarshaler(targetReflectType),
+					Longs:       longs,
+				}
 				if arity == "+" {
 					option.Required = true
 				}

@@ -7,6 +7,15 @@ type Command struct {
 	DefaultAction func() error
 }
 
+func (me Command) Init() error {
+	for _, p := range me.AllParams() {
+		if err := p.Init(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (me Command) AllParams() []Param {
 	return append(me.Options, me.Positionals...)
 }

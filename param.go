@@ -15,9 +15,14 @@ type Param interface {
 	Subcommand() generics.Option[Command]
 	Help() ParamHelp
 	AfterParse(ctx Context) error
+	Init() error
 }
 
 type paramDefaults struct{}
+
+func (paramDefaults) Init() error {
+	return nil
+}
 
 func (paramDefaults) Subcommand() (_ generics.Option[Command]) {
 	return

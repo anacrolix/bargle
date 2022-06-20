@@ -104,6 +104,7 @@ func NewString() *String {
 	return &String{}
 }
 
+// Does a unary unmarshal, trying to infer a default unmarshaler if necessary.
 func doUnaryUnmarshal[T any](s string, t *T, u UnaryUnmarshaler[T]) error {
 	if u != nil {
 		return u.UnaryUnmarshal(s, t)

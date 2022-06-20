@@ -10,6 +10,7 @@ type Main struct {
 	OnError  func(err error)
 	deferred []func()
 	Command
+	NoDefaultHelpSubcommand bool
 }
 
 func (me *Main) Defer(f func()) {
@@ -18,6 +19,9 @@ func (me *Main) Defer(f func()) {
 
 func (me *Main) Run() {
 	ctx := NewContext(os.Args[1:])
+	if me.Command.HasSubcommands() && !me.NoDefaultHelpSubcommand {
+		HelpCommand{}.AddToCommand(&me.Command)
+	}
 	err := ctx.Run(me.Command)
 	if err != nil {
 		if me.OnError != nil {

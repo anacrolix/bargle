@@ -8,7 +8,7 @@ type MatchResult interface {
 	// Could this be represented by a nil interface?
 	Matched() generics.Option[string]
 	Args() Args
-	Parse(ctx Context) error
+	Parse(args Args) error
 	// Should the caller of Matcher.Match remember this?
 	Param() Param
 }
@@ -25,7 +25,7 @@ func (n noMatchType) Args() Args {
 	panic("unimplemented")
 }
 
-func (n noMatchType) Parse(ctx Context) error {
+func (n noMatchType) Parse(Args) error {
 	panic("unimplemented")
 }
 
@@ -37,7 +37,7 @@ type matchedNoParse struct {
 	baseMatchResult
 }
 
-func (m matchedNoParse) Parse(ctx Context) error {
+func (m matchedNoParse) Parse(Args) error {
 	return nil
 }
 

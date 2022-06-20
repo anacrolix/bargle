@@ -141,7 +141,7 @@ func (ctx *context) runMatchResult(mr MatchResult, ranSubCmd *bool) error {
 	// behaviour.
 	matchedArg := mr.Matched().Unwrap()
 	ctx.args = mr.Args()
-	err := mr.Parse(ctx)
+	err := mr.Parse(ctx.args)
 	p := mr.Param()
 	if err != nil {
 		return fmt.Errorf("parsing %q: %w", matchedArg, err)

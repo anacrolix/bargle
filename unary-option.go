@@ -1,7 +1,6 @@
 package bargle
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -65,16 +64,12 @@ type unaryMatchResult[T any] struct {
 	target *T
 }
 
-func (me unaryMatchResult[T]) Parse(ctx Context) error {
-	args := ctx.Args()
+func (me unaryMatchResult[T]) Parse(args Args) error {
 	if args.Len() == 0 {
 		return missingArgument
 	}
-	arg := ctx.Args().Pop()
-	if me.u == nil {
-		return errors.New("no unmarshaler set")
-	}
-	err := me.u.UnaryUnmarshal(arg, me.target)
+	arg := args.Pop()
+	err := doUnaryUnmarshal(arg, me.target, me.u)
 	if err != nil {
 		err = fmt.Errorf("unmarshalling %q: %w", arg, err)
 	}
@@ -97,4 +92,8 @@ func (me *UnaryOption[T]) matchSwitch(args Args) MatchResult {
 		}
 	}
 	return noMatch
+}
+
+func (me *UnaryOption[T]) Parse(args Args) error {
+	return doUnaryUnmarshal(args.Pop(), &me.Value, me.Unmarshaler)
 }

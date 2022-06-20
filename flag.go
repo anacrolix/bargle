@@ -10,9 +10,14 @@ import (
 // parse from a bound value in the same argument (with '=').
 type Flag struct {
 	optionDefaults
-	Value  bool
+	Value  *bool
 	Longs  []string
 	Shorts []rune
+}
+
+func (f *Flag) Parse(args Args) (err error) {
+	*f.Value, err = strconv.ParseBool(args.Pop())
+	return
 }
 
 func (f *Flag) Help() ParamHelp {
@@ -45,7 +50,7 @@ func (f *Flag) matchResult(no bool, us UnarySwitch, args Args, matchedArg string
 			param: f,
 			match: matchedArg,
 		},
-		target: &f.Value,
+		target: f.Value,
 		no:     no,
 	}
 	if us.GotValue() {
@@ -61,7 +66,7 @@ type flagMatchResult struct {
 	no     bool
 }
 
-func (f flagMatchResult) Parse(ctx Context) (err error) {
+func (f flagMatchResult) Parse(Args) (err error) {
 	if f.value.Ok {
 		*f.target, err = strconv.ParseBool(f.value.Value)
 	} else {

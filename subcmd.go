@@ -1,6 +1,8 @@
 package bargle
 
 import (
+	"errors"
+
 	"github.com/anacrolix/generics"
 )
 
@@ -9,6 +11,10 @@ type Subcommand struct {
 	Name string
 	Command
 	Desc string
+}
+
+func (me Subcommand) Parse(args Args) error {
+	return errors.New("subcommands do not take values")
 }
 
 func (me Subcommand) Help() ParamHelp {

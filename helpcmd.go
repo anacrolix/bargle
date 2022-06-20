@@ -1,11 +1,16 @@
 package bargle
 
 import (
+	"errors"
 	"os"
 )
 
 type HelpCommand struct {
 	optionDefaults
+}
+
+func (h HelpCommand) Parse(args Args) error {
+	return errors.New("help does not take value")
 }
 
 func (h HelpCommand) Help() ParamHelp {
@@ -37,10 +42,11 @@ func (me HelpCommand) AddToCommand(cmd *Command) {
 	recurse := &Flag{
 		Longs:  []string{"recurse"},
 		Shorts: []rune{'r'},
+		Value:  new(bool),
 	}
 	sub.Options = append(sub.Options, recurse)
 	cmd.Positionals = append(cmd.Positionals, &sub)
-	addHelpSubcommands(&sub, cmd, &recurse.Value)
+	addHelpSubcommands(&sub, cmd, recurse.Value)
 }
 
 func addHelpSubcommands(to *Subcommand, from *Command, recurse *bool) {

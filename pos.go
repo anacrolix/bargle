@@ -6,11 +6,16 @@ import (
 
 type Positional[T any] struct {
 	posDefaults
-	Value T
-	U     UnaryUnmarshaler[T]
-	Name  string
-	Desc  string
-	ok    bool
+	Value          *T
+	U              UnaryUnmarshaler[T]
+	Name           string
+	Desc           string
+	ok             bool
+	AfterParseFunc AfterParseParamFunc
+}
+
+func (me *Positional[T]) Parse(args Args) error {
+	return doUnaryUnmarshal(args.Pop(), me.Value, me.U)
 }
 
 func (me *Positional[T]) Match(args Args) MatchResult {
@@ -19,15 +24,19 @@ func (me *Positional[T]) Match(args Args) MatchResult {
 	}
 	mr := unaryMatchResult[T]{
 		u:      me.U,
-		target: &me.Value,
+		target: me.Value,
 	}
-	mr.args = args
+	mr.args = args.Clone()
 	mr.param = me
+	mr.match = args.Pop()
 	return mr
 }
 
-func (me *Positional[T]) AfterParse(Context) error {
+func (me *Positional[T]) AfterParse(ctx Context) error {
 	me.ok = true
+	if me.AfterParseFunc != nil {
+		return me.AfterParseFunc(ctx)
+	}
 	return nil
 }
 

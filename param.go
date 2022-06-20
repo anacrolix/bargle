@@ -9,6 +9,9 @@ type AfterParseParamFunc func(ctx Context) error
 type Param interface {
 	Satisfied() bool
 	Matcher
+	// This should not be used directly, normally, and instead Parse is called on a match result.
+	// This is used for parsing defaults for example.
+	Parse(args Args) error
 	Subcommand() generics.Option[Command]
 	Help() ParamHelp
 	AfterParse(ctx Context) error

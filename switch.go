@@ -1,5 +1,9 @@
 package bargle
 
+import (
+	"errors"
+)
+
 // A switch is an option that takes no values and has no negative form.
 type Switch struct {
 	optionDefaults
@@ -7,6 +11,10 @@ type Switch struct {
 	Shorts         []rune
 	Desc           string
 	AfterParseFunc AfterParseParamFunc
+}
+
+func (f Switch) Parse(args Args) error {
+	return errors.New("switches do not take values")
 }
 
 func (f Switch) Match(args Args) (mr MatchResult) {

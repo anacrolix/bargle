@@ -1,7 +1,7 @@
 package bargle
 
 import (
-	"fmt"
+	"errors"
 	"strings"
 
 	"github.com/anacrolix/generics"
@@ -20,7 +20,7 @@ func (me Choice[T]) UnaryUnmarshal(choice string, t *T) error {
 	var ok bool
 	*t, ok = me.Choices[choice]
 	if !ok {
-		return controlError{fmt.Errorf("unknown choice: %q", choice)}
+		return controlError{errors.New("unknown choice")}
 	}
 	return nil
 }

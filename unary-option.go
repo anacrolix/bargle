@@ -11,6 +11,8 @@ type UnaryOption[T any] struct {
 	Unmarshaler UnaryUnmarshaler[T]
 	Longs       []string
 	Shorts      []rune
+	Required    bool
+	parsed      bool
 }
 
 func NewUnaryOption[T builtinUnaryUnmarshalTarget](target *T) *UnaryOption[T] {
@@ -32,6 +34,15 @@ func (me *UnaryOption[T]) Help() ParamHelp {
 		Forms:  me.switchForms(),
 		Values: me.Unmarshaler.TargetHelp(),
 	}
+}
+
+func (me *UnaryOption[T]) AfterParse(Context) error {
+	me.parsed = true
+	return nil
+}
+
+func (me *UnaryOption[T]) Satisfied() bool {
+	return !me.Required || me.parsed
 }
 
 func (me *UnaryOption[T]) AddLong(long string) *UnaryOption[T] {

@@ -82,3 +82,11 @@ func withExitCode(exitCode int, err error) error {
 		exitCode: exitCode,
 	}
 }
+
+type paramError struct {
+	msg string
+}
+
+func (me paramError) Error() string {
+	return me.msg
+}

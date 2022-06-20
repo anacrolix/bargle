@@ -1,6 +1,7 @@
 package bargle
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strings"
@@ -109,11 +110,27 @@ options:
 		}
 		return fmt.Errorf("unhandled arg: %q", ctx.args.Pop())
 	}
+	err := ctx.assertCommandSatisfied(cmd)
+	if err != nil {
+		return err
+	}
 	if !ranSubCmd {
 		if cmd.DefaultAction != nil {
 			*ctx.actions = append(*ctx.actions, cmd.DefaultAction)
 		} else {
 			return errors.New("no subcommand invoked and no default action")
+		}
+	}
+	return nil
+}
+
+func (ctx *context) assertCommandSatisfied(cmd Command) error {
+	for _, p := range cmd.AllParams() {
+		if !p.Satisfied() {
+			var buf bytes.Buffer
+			hw := HelpWriter{w: &buf}.Indented()
+			p.Help().Write(hw)
+			return paramError{fmt.Sprintf("unsatisfied param:\n%s", buf.Bytes())}
 		}
 	}
 	return nil

@@ -14,6 +14,9 @@ type Positional[T any] struct {
 }
 
 func (me *Positional[T]) Match(args Args) MatchResult {
+	if me.ok {
+		return noMatch
+	}
 	mr := unaryMatchResult[T]{
 		u:      me.U,
 		target: &me.Value,
@@ -21,6 +24,11 @@ func (me *Positional[T]) Match(args Args) MatchResult {
 	mr.args = args
 	mr.param = me
 	return mr
+}
+
+func (me *Positional[T]) AfterParse(Context) error {
+	me.ok = true
+	return nil
 }
 
 func (me *Positional[T]) Satisfied() bool {

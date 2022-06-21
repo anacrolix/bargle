@@ -29,9 +29,9 @@ func FromStruct(target interface{}) (cmd Command) {
 		}
 		if argTag == "positional" {
 			param = &Positional[any]{
-				Name: fmt.Sprintf("%v.%v", type_.Name(), structField.Name),
-				Desc: structField.Tag.Get("help"),
-				U:    getUnmarshaler(),
+				Name:  fmt.Sprintf("%v.%v", type_.Name(), structField.Name),
+				Desc:  structField.Tag.Get("help"),
+				Value: getUnmarshaler(),
 			}
 			cmd.Positionals = append(cmd.Positionals, param)
 		} else {
@@ -45,8 +45,8 @@ func FromStruct(target interface{}) (cmd Command) {
 				cmd.Options = append(cmd.Options)
 			default:
 				option := &UnaryOption[any]{
-					Unmarshaler: getUnmarshaler(),
-					Longs:       longs,
+					Value: getUnmarshaler(),
+					Longs: longs,
 				}
 				if arity == "+" {
 					option.Required = true

@@ -10,7 +10,6 @@ type Subcommand struct {
 	optionDefaults
 	Name string
 	Command
-	Desc string
 }
 
 func (me Subcommand) Parse(args Args) error {

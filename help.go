@@ -40,6 +40,7 @@ type commandHelp struct {
 	Options    []ParamHelp
 	Positional []ParamHelp
 	Commands   []ParamHelp
+	Desc       string
 }
 
 type helpFormatter struct {
@@ -54,6 +55,9 @@ func (me helpFormatter) writeParam(hw HelpWriter, ph ParamHelp) {
 }
 
 func (me helpFormatter) writeCommand(hw HelpWriter, ch commandHelp) {
+	if ch.Desc != "" {
+		hw.WriteLine(ch.Desc)
+	}
 	if len(ch.Options) != 0 {
 		hw.WriteLine("options:")
 		for _, ph := range ch.Options {

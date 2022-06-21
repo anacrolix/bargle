@@ -42,8 +42,8 @@ func (h HelpCommand) Match(args Args) MatchResult {
 func (me HelpCommand) AddToCommand(cmd *Command) {
 	sub := Subcommand{
 		Name: "help",
-		Desc: "help with subcommands",
 	}
+	sub.Desc = "help with subcommands"
 	recurse := &Flag{
 		Longs:  []string{"recurse"},
 		Shorts: []rune{'r'},

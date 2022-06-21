@@ -9,6 +9,7 @@ type Command struct {
 	Positionals []Param
 	// Action taken if no subcommand is invoked.
 	DefaultAction func() error
+	Desc          string
 }
 
 func (me Command) Init() error {
@@ -60,5 +61,6 @@ func (cmd Command) Help() (hf commandHelp) {
 			hf.AddPositional(p.Help())
 		}
 	}
+	hf.Desc = cmd.Desc
 	return
 }

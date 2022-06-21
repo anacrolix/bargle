@@ -20,7 +20,11 @@ func (me Command) Init() error {
 					panic(fmt.Sprintf("initing %v: %v", p, r))
 				}
 			}()
-			return p.Init()
+			err := p.Init()
+			if err != nil {
+				return err
+			}
+			return p.Subcommand().Value.Init()
 		}()
 		if err != nil {
 			return err

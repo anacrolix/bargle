@@ -18,8 +18,7 @@ func (me UnaryOption[T]) Value() T {
 }
 
 func (me *UnaryOption[T]) Init() error {
-	initNilUnmarshalerUsingReflect(&me.Unmarshaler)
-	return nil
+	return initNilUnmarshalerUsingReflect(&me.Unmarshaler)
 }
 
 func (me *UnaryOption[T]) switchForms() (ret []string) {

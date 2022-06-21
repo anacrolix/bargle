@@ -6,7 +6,6 @@ import (
 
 type Positional[T any] struct {
 	posDefaults
-	Value          T
 	U              UnaryUnmarshaler[T]
 	Name           string
 	Desc           string
@@ -14,8 +13,17 @@ type Positional[T any] struct {
 	AfterParseFunc AfterParseParamFunc
 }
 
+func (me Positional[T]) Value() T {
+	return me.U.Value()
+}
+
+func (me *Positional[T]) Init() error {
+	initNilUnmarshalerUsingReflect(&me.U)
+	return nil
+}
+
 func (me *Positional[T]) Parse(args Args) error {
-	return doUnaryUnmarshal(args.Pop(), me.Value, me.U)
+	return me.U.UnaryUnmarshal(args.Pop())
 }
 
 func (me *Positional[T]) Match(args Args) MatchResult {
@@ -23,8 +31,7 @@ func (me *Positional[T]) Match(args Args) MatchResult {
 		return noMatch
 	}
 	mr := unaryMatchResult[T]{
-		u:      me.U,
-		target: me.Value,
+		u: me.U,
 	}
 	mr.args = args.Clone()
 	mr.param = me

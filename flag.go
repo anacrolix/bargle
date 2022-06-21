@@ -15,6 +15,10 @@ type Flag struct {
 	Shorts []rune
 }
 
+func (f Flag) Init() error {
+	return nil
+}
+
 func (f Flag) Parse(args Args) (err error) {
 	*f.Value, err = strconv.ParseBool(args.Pop())
 	return

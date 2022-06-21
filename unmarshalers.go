@@ -10,7 +10,8 @@ import (
 )
 
 type UnaryUnmarshaler[T any] interface {
-	UnaryUnmarshal(s string, t T) error
+	UnaryUnmarshal(s string) error
+	Value() T
 	TargetHelp() string
 }
 
@@ -56,26 +57,32 @@ type Unmarshaler[T any] interface {
 }
 
 type Slice[T any] struct {
-	Unmarshaler UnaryUnmarshaler[*T]
+	value       *[]T
+	Unmarshaler UnaryUnmarshaler[T]
 }
 
 func (s2 Slice[T]) TargetHelp() string {
 	return s2.Unmarshaler.TargetHelp() + "..."
 }
 
-func (sl Slice[T]) UnaryUnmarshal(s string, slice *[]T) error {
-	var t T
-	err := sl.Unmarshaler.UnaryUnmarshal(s, &t)
+func (sl Slice[T]) UnaryUnmarshal(s string) error {
+	err := sl.Unmarshaler.UnaryUnmarshal(s)
 	if err != nil {
 		return err
 	}
-	*slice = append(*slice, t)
+	*sl.value = append(*sl.value, sl.Unmarshaler.Value())
 	return nil
 }
 
-type String struct{}
+type String struct {
+	value *string
+}
 
-var _ UnaryUnmarshaler[*string] = String{}
+var _ UnaryUnmarshaler[string] = String{}
+
+func (me String) Value() string {
+	return *me.value
+}
 
 func (s2 String) TargetHelp() string {
 	return "(string)"
@@ -86,8 +93,8 @@ func (String) Unmarshal(args Args, s *string) error {
 	return nil
 }
 
-func (String) UnaryUnmarshal(arg string, s *string) error {
-	*s = arg
+func (me String) UnaryUnmarshal(arg string) error {
+	*me.value = arg
 	return nil
 }
 
@@ -96,84 +103,70 @@ func NewString() *String {
 }
 
 // Does a unary unmarshal, trying to infer a default unmarshaler if necessary.
-func doUnaryUnmarshal[T any](s string, t T, u UnaryUnmarshaler[T]) error {
-	if u != nil {
-		return u.UnaryUnmarshal(s, t)
+func mustGetUnaryUnmarshaler(target any) (_ anyUnaryUnmarshaler, err error) {
+	unmarshalFunc, err := mustGetUnaryUnmarshalAnyFunc(target)
+	if err != nil {
+		err = fmt.Errorf("getting unmarshal func for a %T: %w", target, err)
+		return
 	}
-	if tu, ok := any(t).(encoding.TextUnmarshaler); ok {
-		return tu.UnmarshalText([]byte(s))
-	}
-	switch p := any(t).(type) {
-	case *string:
-		return String{}.UnaryUnmarshal(s, p)
-	default:
-		panic(fmt.Sprintf("unhandled default unary unmarshaler type %T", t))
-	}
-}
-
-// Does a unary unmarshal, trying to infer a default unmarshaler if necessary.
-func mustGetUnaryUnmarshaler(target reflect.Type) anyUnaryUnmarshaler {
-	return anyUnaryUnmarshalerFunc{
-		u: mustGetUnaryUnmarshalAnyFunc(target),
+	return unaryUnmarshalerFunc[any]{
+		target: target,
+		u:      unmarshalFunc,
 		// TODO: Collapse pointers that get allocated automatically for this type. Pass through some
 		// nice examples for builtins when/if they are added.
-		help: fmt.Sprintf("(%v)", target.String()),
-	}
+		help: fmt.Sprintf("(%v)", reflect.TypeOf(target).Elem().String()),
+	}, nil
 }
 
 // Does a unary unmarshal, trying to infer a default unmarshaler if necessary.
-func mustGetUnaryUnmarshalAnyFunc(target reflect.Type) func(string, any) error {
-	if target.Implements(reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()) {
-		return func(s string, a any) error {
-			return a.(encoding.TextUnmarshaler).UnmarshalText([]byte(s))
-		}
+func mustGetUnaryUnmarshalAnyFunc(target any) (func(string) error, error) {
+	if tu, ok := target.(encoding.TextUnmarshaler); ok {
+		return func(s string) error {
+			return tu.UnmarshalText([]byte(s))
+		}, nil
 	}
-	switch target.Elem().Kind() {
+	switch p := target.(type) {
+	case *string:
+		return String{value: p}.UnaryUnmarshal, nil
+	case *uint16:
+		return func(s string) error {
+			u64, err := strconv.ParseUint(s, 0, 16)
+			*p = uint16(u64)
+			return err
+		}, nil
+	}
+	targetPtrValue := reflect.ValueOf(target)
+	targetValue := targetPtrValue.Elem()
+	targetType := targetPtrValue.Type().Elem()
+	switch targetType.Kind() {
 	case reflect.Slice:
-		eu := mustGetUnaryUnmarshalAnyFunc(reflect.PtrTo(target.Elem().Elem()))
-		return func(s string, a any) error {
-			ev := reflect.New(target.Elem().Elem())
-			err := eu(s, ev.Interface())
+		elemTarget := reflect.New(targetType.Elem())
+		eu, err := mustGetUnaryUnmarshalAnyFunc(elemTarget.Interface())
+		if err != nil {
+			return nil, fmt.Errorf("getting unmarshaller for slice elem: %w", err)
+		}
+		return func(s string) error {
+			err := eu(s)
 			if err != nil {
 				return err
 			}
-			slice := reflect.ValueOf(a).Elem()
-			slice.Set(reflect.Append(slice, ev.Elem()))
+			targetValue.Set(reflect.Append(targetValue, elemTarget.Elem()))
 			return nil
-		}
-	case reflect.String:
-		return func(s string, a any) error {
-			*a.(*string) = s
-			return nil
-		}
-	case reflect.Ptr:
-		uf := mustGetUnaryUnmarshalAnyFunc(target.Elem())
-		return func(s string, a any) error {
-			ev := reflect.New(target.Elem())
-			err := uf(s, ev.Interface())
-			if err != nil {
-				return err
-			}
-			reflect.ValueOf(a).Elem().Set(ev)
-			return nil
-		}
+		}, nil
+	//case reflect.Ptr:
+	//	uf := mustGetUnaryUnmarshalAnyFunc(target.Elem())
+	//	return func(s string, a any) error {
+	//		ev := reflect.New(target.Elem())
+	//		err := uf(s, ev.Interface())
+	//		if err != nil {
+	//			return err
+	//		}
+	//		reflect.ValueOf(a).Elem().Set(ev)
+	//		return nil
+	//	}
 	default:
-		panic(fmt.Errorf("unhandled unary unmarshaler reflection type: %v", target))
+		return nil, fmt.Errorf("unhandled unary unmarshaler reflection type: %T", target)
 	}
-
-}
-
-type anyUnaryUnmarshalerFunc struct {
-	u    func(string, any) error
-	help string
-}
-
-func (me anyUnaryUnmarshalerFunc) UnaryUnmarshal(s string, a any) error {
-	return me.u(s, a)
-}
-
-func (me anyUnaryUnmarshalerFunc) TargetHelp() string {
-	return me.help
 }
 
 type anyUnaryUnmarshaler = UnaryUnmarshaler[any]
@@ -182,6 +175,53 @@ type unaryUnmarshalerAnyWrapper[T any] struct {
 	UnaryUnmarshaler[T]
 }
 
-func (me unaryUnmarshalerAnyWrapper[T]) UnaryUnmarshal(s string, t any) error {
-	return me.UnaryUnmarshaler.UnaryUnmarshal(s, (t).(T))
+func (me unaryUnmarshalerAnyWrapper[T]) UnaryUnmarshal(s string) error {
+	return me.UnaryUnmarshaler.UnaryUnmarshal(s)
+}
+
+type unaryUnmarshalerWrapperAnyToTyped[T any] struct {
+	anyUnaryUnmarshaler
+}
+
+func (me unaryUnmarshalerWrapperAnyToTyped[T]) UnaryUnmarshal(s string) error {
+	return me.anyUnaryUnmarshaler.UnaryUnmarshal(s)
+}
+
+func (me unaryUnmarshalerWrapperAnyToTyped[T]) Value() T {
+	return me.anyUnaryUnmarshaler.Value().(T)
+}
+
+func initNilUnmarshalerUsingReflect[T any](u *UnaryUnmarshaler[T]) error {
+	if *u != nil {
+		return nil
+	}
+	t := new(T)
+	unmarshaler, err := mustGetUnaryUnmarshaler(t)
+	if err != nil {
+		return err
+	}
+	*u = unaryUnmarshalerWrapperAnyToTyped[T]{unmarshaler}
+	return nil
+}
+
+type unaryUnmarshalerFunc[T any] struct {
+	u      func(string) error
+	target T
+	help   string
+}
+
+func (me unaryUnmarshalerFunc[T]) UnaryUnmarshal(s string) error {
+	return me.u(s)
+}
+
+func (me unaryUnmarshalerFunc[T]) TargetHelp() string {
+	return me.help
+}
+
+func (me unaryUnmarshalerFunc[T]) Value() T {
+	targetValue := reflect.ValueOf(me.target)
+	if targetValue.IsNil() {
+		panic(fmt.Errorf("target is nil: %v", me.target))
+	}
+	return targetValue.Elem().Interface().(T)
 }

@@ -20,10 +20,6 @@ type Param interface {
 
 type paramDefaults struct{}
 
-func (paramDefaults) Init() error {
-	return nil
-}
-
 func (paramDefaults) Subcommand() (_ generics.Option[Command]) {
 	return
 }

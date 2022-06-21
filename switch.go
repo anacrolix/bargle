@@ -13,6 +13,10 @@ type Switch struct {
 	AfterParseFunc AfterParseParamFunc
 }
 
+func (f Switch) Init() error {
+	return nil
+}
+
 func (f Switch) Parse(args Args) error {
 	return errors.New("switches do not take values")
 }

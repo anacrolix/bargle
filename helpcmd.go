@@ -9,6 +9,11 @@ type HelpCommand struct {
 	optionDefaults
 }
 
+func (h HelpCommand) Init() error {
+	// Could walk an attached param here.
+	return nil
+}
+
 func (h HelpCommand) Parse(args Args) error {
 	return errors.New("help does not take value")
 }

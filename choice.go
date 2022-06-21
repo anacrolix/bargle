@@ -9,16 +9,21 @@ import (
 )
 
 type Choice[T any] struct {
+	value   T
 	Choices map[string]T
+}
+
+func (me Choice[T]) Value() T {
+	return me.value
 }
 
 func (me Choice[T]) TargetHelp() string {
 	return strings.Join(maps.Keys(me.Choices), " | ")
 }
 
-func (me Choice[T]) UnaryUnmarshal(choice string, t *T) error {
+func (me *Choice[T]) UnaryUnmarshal(choice string) error {
 	var ok bool
-	*t, ok = me.Choices[choice]
+	me.value, ok = me.Choices[choice]
 	if !ok {
 		return controlError{errors.New("unknown choice")}
 	}

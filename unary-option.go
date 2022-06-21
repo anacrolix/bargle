@@ -6,12 +6,20 @@ import (
 
 type UnaryOption[T any] struct {
 	optionDefaults
-	Value       T
 	Unmarshaler UnaryUnmarshaler[T]
 	Longs       []string
 	Shorts      []rune
 	Required    bool
 	parsed      bool
+}
+
+func (me UnaryOption[T]) Value() T {
+	return me.Unmarshaler.Value()
+}
+
+func (me *UnaryOption[T]) Init() error {
+	initNilUnmarshalerUsingReflect(&me.Unmarshaler)
+	return nil
 }
 
 func (me *UnaryOption[T]) switchForms() (ret []string) {
@@ -56,8 +64,7 @@ func (me *UnaryOption[T]) Match(args Args) MatchResult {
 
 type unaryMatchResult[T any] struct {
 	baseMatchResult
-	u      UnaryUnmarshaler[T]
-	target T
+	u UnaryUnmarshaler[T]
 }
 
 func (me unaryMatchResult[T]) Parse(args Args) error {
@@ -65,7 +72,7 @@ func (me unaryMatchResult[T]) Parse(args Args) error {
 		return missingArgument
 	}
 	arg := args.Pop()
-	err := doUnaryUnmarshal(arg, me.target, me.u)
+	err := me.u.UnaryUnmarshal(arg)
 	if err != nil {
 		err = fmt.Errorf("unmarshalling %q: %w", arg, err)
 	}
@@ -77,19 +84,19 @@ func (me *UnaryOption[T]) matchSwitch(args Args) MatchResult {
 		_args := args.Clone()
 		gv := &LongParser{Long: l, CanUnary: true}
 		if gv.Match(_args) {
-			return unaryMatchResult[T]{baseMatchResult{_args, me, args.Clone().Pop()}, me.Unmarshaler, me.Value}
+			return unaryMatchResult[T]{baseMatchResult{_args, me, args.Clone().Pop()}, me.Unmarshaler}
 		}
 	}
 	for _, s := range me.Shorts {
 		_args := args.Clone()
 		gv := &ShortParser{Short: s, CanUnary: true}
 		if gv.Match(_args) {
-			return unaryMatchResult[T]{baseMatchResult{_args, me, args.Clone().Pop()}, me.Unmarshaler, me.Value}
+			return unaryMatchResult[T]{baseMatchResult{_args, me, args.Clone().Pop()}, me.Unmarshaler}
 		}
 	}
 	return noMatch
 }
 
 func (me *UnaryOption[T]) Parse(args Args) error {
-	return doUnaryUnmarshal(args.Pop(), me.Value, me.Unmarshaler)
+	return me.Unmarshaler.UnaryUnmarshal(args.Pop())
 }

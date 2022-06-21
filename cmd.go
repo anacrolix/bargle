@@ -1,5 +1,9 @@
 package bargle
 
+import (
+	"fmt"
+)
+
 type Command struct {
 	Options     []Param
 	Positionals []Param
@@ -9,7 +13,16 @@ type Command struct {
 
 func (me Command) Init() error {
 	for _, p := range me.AllParams() {
-		if err := p.Init(); err != nil {
+		err := func() error {
+			defer func() {
+				r := recover()
+				if r != nil {
+					panic(fmt.Sprintf("initing %v: %v", p, r))
+				}
+			}()
+			return p.Init()
+		}()
+		if err != nil {
 			return err
 		}
 	}

@@ -21,7 +21,7 @@ func FromStruct(target interface{}) (cmd Command) {
 		arity := structField.Tag.Get("arity")
 		var param Param
 		getUnmarshaler := func() anyUnaryUnmarshaler {
-			unmarshaler, err := mustGetUnaryUnmarshaler(target)
+			unmarshaler, err := makeAnyUnaryUnmarshalerViaReflection(target)
 			if err != nil {
 				panic(fmt.Errorf("getting unmarshaler for %v: %w", structField, err))
 			}

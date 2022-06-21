@@ -26,7 +26,7 @@ func (me *Positional[T]) Parse(args Args) error {
 }
 
 func (me *Positional[T]) Match(args Args) MatchResult {
-	if me.ok {
+	if !me.U.Matching() {
 		return noMatch
 	}
 	mr := unaryMatchResult[T]{
@@ -53,6 +53,7 @@ func (me *Positional[T]) Satisfied() bool {
 func (me *Positional[T]) Help() ParamHelp {
 	return ParamHelp{
 		Forms:       []string{fmt.Sprintf("<%v>", me.Name)},
+		Values:      me.U.TargetHelp(),
 		Description: me.Desc,
 	}
 }

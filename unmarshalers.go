@@ -206,11 +206,13 @@ func (me unaryUnmarshalerWrapperAnyToTyped[T]) Value() T {
 	return me.anyUnaryUnmarshaler.Value().(T)
 }
 
-func initNilUnmarshalerUsingReflect[T any](u *UnaryUnmarshaler[T]) error {
+func initNilUnmarshalerUsingReflect[T any](u *UnaryUnmarshaler[T], t *T) error {
 	if *u != nil {
 		return nil
 	}
-	t := new(T)
+	if t == nil {
+		t = new(T)
+	}
 	unmarshaler, err := makeAnyUnaryUnmarshalerViaReflection(t)
 	if err != nil {
 		return err

@@ -10,7 +10,8 @@ type Param interface {
 	Satisfied() bool
 	Matcher
 	// This should not be used directly, normally, and instead Parse is called on a match result.
-	// This is used for parsing defaults for example.
+	// This is used for parsing defaults for example. TODO: Move to Unmarshaler Value and don't
+	// expose here?
 	Parse(args Args) error
 	Subcommand() generics.Option[Command]
 	Help() ParamHelp

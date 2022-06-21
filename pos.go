@@ -18,7 +18,7 @@ func (me Positional[T]) Value() T {
 }
 
 func (me *Positional[T]) Init() error {
-	return initNilUnmarshalerUsingReflect(&me.U)
+	return initNilUnmarshalerUsingReflect(&me.U, nil)
 }
 
 func (me *Positional[T]) Parse(args Args) error {

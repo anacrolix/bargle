@@ -13,6 +13,10 @@ type Choice[T any] struct {
 	Choices map[string]T
 }
 
+func (me Choice[T]) Matching() bool {
+	return true
+}
+
 func (me Choice[T]) Value() T {
 	return me.value
 }

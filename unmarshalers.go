@@ -75,13 +75,13 @@ func (sl Slice[T]) UnaryUnmarshal(s string) error {
 }
 
 type String struct {
-	value *string
+	Target *string
 }
 
 var _ UnaryUnmarshaler[string] = String{}
 
 func (me String) Value() string {
-	return *me.value
+	return *me.Target
 }
 
 func (s2 String) TargetHelp() string {
@@ -94,7 +94,7 @@ func (String) Unmarshal(args Args, s *string) error {
 }
 
 func (me String) UnaryUnmarshal(arg string) error {
-	*me.value = arg
+	*me.Target = arg
 	return nil
 }
 
@@ -127,7 +127,7 @@ func mustGetUnaryUnmarshalAnyFunc(target any) (func(string) error, error) {
 	}
 	switch p := target.(type) {
 	case *string:
-		return String{value: p}.UnaryUnmarshal, nil
+		return String{Target: p}.UnaryUnmarshal, nil
 	case *uint16:
 		return func(s string) error {
 			u64, err := strconv.ParseUint(s, 0, 16)
@@ -153,17 +153,23 @@ func mustGetUnaryUnmarshalAnyFunc(target any) (func(string) error, error) {
 			targetValue.Set(reflect.Append(targetValue, elemTarget.Elem()))
 			return nil
 		}, nil
-	//case reflect.Ptr:
-	//	uf := mustGetUnaryUnmarshalAnyFunc(target.Elem())
-	//	return func(s string, a any) error {
-	//		ev := reflect.New(target.Elem())
-	//		err := uf(s, ev.Interface())
-	//		if err != nil {
-	//			return err
-	//		}
-	//		reflect.ValueOf(a).Elem().Set(ev)
-	//		return nil
-	//	}
+	case reflect.Ptr:
+		subTarget := targetValue
+		if subTarget.IsNil() {
+			subTarget = reflect.New(targetType.Elem())
+		}
+		elemUnmarshaler, err := mustGetUnaryUnmarshalAnyFunc(subTarget.Interface())
+		if err != nil {
+			return nil, fmt.Errorf("getting unmarshaller for target elem: %w", err)
+		}
+		return func(s string) error {
+			err := elemUnmarshaler(s)
+			if err != nil {
+				return err
+			}
+			targetValue.Set(subTarget)
+			return nil
+		}, nil
 	default:
 		return nil, fmt.Errorf("unhandled unary unmarshaler reflection type: %T", target)
 	}

@@ -91,7 +91,7 @@ func makeSimpleAnyUnaryUnmarshalFromFunc[T any](target T, u func(string) error) 
 			matching: func() bool {
 				return !matched
 			},
-			help: fmt.Sprintf("(%T)", target),
+			help: fmt.Sprintf("(%v)", reflect.TypeOf(target).Elem().String()),
 		},
 	}
 }
@@ -148,7 +148,7 @@ func makeAnyUnaryUnmarshalerViaReflection(target any) (anyUnaryUnmarshaler, erro
 			matching: func() bool {
 				return true
 			},
-			help: fmt.Sprintf("(%T)...", target),
+			help: fmt.Sprintf("(%v...)", reflect.TypeOf(target).Elem().Elem().String()),
 		}, nil
 	case reflect.Ptr:
 		subTarget := targetValue

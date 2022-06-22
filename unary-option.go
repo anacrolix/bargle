@@ -11,6 +11,7 @@ type UnaryOption struct {
 	unaryOptionOpts
 	switchesOpts
 	parsed bool
+	desc   string
 }
 
 type unaryOptionOpts struct {
@@ -39,8 +40,9 @@ func (me *UnaryOption) switchForms() (ret []string) {
 
 func (me *UnaryOption) Help() ParamHelp {
 	return ParamHelp{
-		Forms:  me.switchForms(),
-		Values: me.Value.TargetHelp(),
+		Forms:       me.switchForms(),
+		Values:      me.Value.TargetHelp(),
+		Description: me.desc,
 	}
 }
 
@@ -100,6 +102,7 @@ type unaryOptionMaker struct {
 	unaryOptionOpts
 	switchesMaker
 	default_ generics.Option[string]
+	desc     string
 }
 
 func (me *unaryOptionMaker) SetDefault(default_ string) {
@@ -123,5 +126,10 @@ func (me *unaryOptionMaker) Make() *UnaryOption {
 	return &UnaryOption{
 		unaryOptionOpts: me.unaryOptionOpts,
 		switchesOpts:    me.switchesOpts,
+		desc:            me.desc,
 	}
+}
+
+func (me *unaryOptionMaker) Description(desc string) {
+	me.desc = desc
 }

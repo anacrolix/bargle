@@ -1,7 +1,6 @@
 package bargle
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"strings"
@@ -131,10 +130,7 @@ options:
 func (ctx *context) assertCommandSatisfied(cmd Command) error {
 	for _, p := range cmd.AllParams() {
 		if !p.Satisfied() {
-			var buf bytes.Buffer
-			hw := HelpWriter{w: &buf}.Indented()
-			p.Help().Write(hw)
-			return paramError{fmt.Sprintf("unsatisfied param:\n%s", buf.Bytes())}
+			return unsatisfiedParam{p}
 		}
 	}
 	return nil

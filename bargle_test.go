@@ -1,6 +1,8 @@
 package bargle
 
 import (
+	"fmt"
+	"log"
 	"testing"
 
 	"github.com/anacrolix/tagflag"
@@ -12,6 +14,7 @@ var errorSpewConfig = spew.NewDefaultConfig()
 
 func init() {
 	errorSpewConfig.DisableMethods = true
+	log.SetFlags(log.Flags() | log.Lshortfile)
 }
 
 func TestParseFlagNoArgs(t *testing.T) {
@@ -109,4 +112,68 @@ func TestFromStructDefaults(t *testing.T) {
 	c.Check(struct_.NoDefault, qt.IsFalse)
 	c.Check(struct_.Default420, qt.Equals, "420")
 	c.Check(struct_.SetManually, qt.DeepEquals, []string{"hello", "world"})
+}
+
+type trigram string
+
+func (me *trigram) UnmarshalText(b []byte) error {
+	if len(b) != 3 {
+		return fmt.Errorf("expected 3 chars, got %v", len(b))
+	}
+	*me = trigram(string(b))
+	return nil
+}
+
+func TestUnmarshalStructSliceTextUnmarshaler(t *testing.T) {
+	var struct_ struct {
+		Nope  string    `arg:"positional"`
+		Hello []trigram `arg:"positional" arity:"+"`
+	}
+	withCmd := func(f func(cmd Command)) {
+		struct_.Nope = ""
+		struct_.Hello = nil
+		cmd := FromStruct(&struct_)
+		cmd.DefaultAction = func() error { return nil }
+		f(cmd)
+	}
+	c := qt.New(t)
+
+	withCmd(func(cmd Command) {
+		ctx := NewContext(nil)
+		err := ctx.Run(cmd)
+		var up unsatisfiedParam
+		if c.Check(err, qt.ErrorAs, &up) {
+			c.Check(up.p, qt.Equals, cmd.Positionals[0])
+		}
+	})
+
+	withCmd(func(cmd Command) {
+		ctx := NewContext([]string{"nope"})
+		err := ctx.Run(cmd)
+		var up unsatisfiedParam
+		if c.Check(err, qt.ErrorAs, &up) {
+			c.Check(up.p, qt.Equals, cmd.Positionals[1])
+		}
+	})
+
+	withCmd(func(cmd Command) {
+		ctx := NewContext([]string{"nope", "abc"})
+		err := ctx.Run(cmd)
+		c.Assert(err, qt.IsNil)
+		c.Check(struct_.Hello, qt.DeepEquals, []trigram{"abc"})
+	})
+
+	withCmd(func(cmd Command) {
+		ctx := NewContext([]string{"nope", "abc", "def"})
+		err := ctx.Run(cmd)
+		c.Assert(err, qt.IsNil)
+		c.Check(struct_.Hello, qt.DeepEquals, []trigram{"abc", "def"})
+	})
+
+	withCmd(func(cmd Command) {
+		ctx := NewContext([]string{"nope", "abc", "herp", "def"})
+		err := ctx.Run(cmd)
+		c.Assert(err, qt.IsNotNil)
+		c.Check(struct_.Hello, qt.DeepEquals, []trigram{"abc"})
+	})
 }

@@ -1,6 +1,7 @@
 package bargle
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 
@@ -83,10 +84,25 @@ func withExitCode(exitCode int, err error) error {
 	}
 }
 
+func (me exitCodeErrorWrapper) Unwrap() error {
+	return me.error
+}
+
 type paramError struct {
 	msg string
 }
 
 func (me paramError) Error() string {
 	return me.msg
+}
+
+type unsatisfiedParam struct {
+	p Param
+}
+
+func (me unsatisfiedParam) Error() string {
+	var buf bytes.Buffer
+	hw := HelpWriter{w: &buf}.Indented()
+	me.p.Help().Write(hw)
+	return fmt.Sprintf("unsatisfied param:\n%s", buf.Bytes())
 }

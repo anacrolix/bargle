@@ -33,6 +33,7 @@ func FromStruct(target interface{}) (cmd Command) {
 				Desc:  structField.Tag.Get("help"),
 				Value: getUnmarshaler(),
 			}
+			// TODO: Handle required/not-required.
 			cmd.Positionals = append(cmd.Positionals, param)
 		} else {
 			longs := []string{xstrings.ToKebabCase(structField.Name)}

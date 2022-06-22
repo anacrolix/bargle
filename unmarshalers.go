@@ -69,6 +69,7 @@ func (s2 String) TargetHelp() string {
 
 func (me *String) UnaryUnmarshal(arg string) error {
 	*me.Target = arg
+	me.Ok = true
 	return nil
 }
 

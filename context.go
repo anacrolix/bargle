@@ -158,7 +158,7 @@ func (ctx *context) runMatchResult(mr MatchResult, ranSubCmd *bool) error {
 	if sub.Ok {
 		err := ctx.runCommand(sub.Value)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %w", matchedArg, err)
 		}
 		*ranSubCmd = true
 	}

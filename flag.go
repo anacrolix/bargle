@@ -10,9 +10,17 @@ import (
 // parse from a bound value in the same argument (with '=').
 type Flag struct {
 	optionDefaults
-	Value  *bool
-	Longs  []string
-	Shorts []rune
+	Value *bool
+	switchesOpts
+}
+
+func NewFlag(target *bool) *flagMaker {
+	if target == nil {
+		target = new(bool)
+	}
+	return &flagMaker{
+		target: target,
+	}
 }
 
 func (f Flag) Init() error {
@@ -28,23 +36,13 @@ func (f Flag) Help() ParamHelp {
 	ph := ParamHelp{
 		Values: "[true|1|false|0]",
 	}
-	for _, l := range f.Longs {
+	for _, l := range f.longs {
 		ph.Forms = append(ph.Forms, "--"+l, "--no-"+l)
 	}
-	for _, s := range f.Shorts {
+	for _, s := range f.shorts {
 		ph.Forms = append(ph.Forms, "-"+string(s), "+"+string(s))
 	}
 	return ph
-}
-
-func (f *Flag) AddLong(l string) *Flag {
-	f.Longs = append(f.Longs, l)
-	return f
-}
-
-func (f *Flag) AddShort(s rune) *Flag {
-	f.Shorts = append(f.Shorts, s)
-	return f
 }
 
 func (f *Flag) matchResult(no bool, us UnarySwitch, args Args, matchedArg string) MatchResult {
@@ -86,7 +84,7 @@ func (f flagMatchResult) Parse(Args) (err error) {
 var _ MatchResult = flagMatchResult{}
 
 func (f Flag) Match(args Args) (mr MatchResult) {
-	for _, l := range f.Longs {
+	for _, l := range f.longs {
 		_args := args.Clone()
 		p := LongParser{Long: l, CanUnary: true}
 		if p.Match(_args) {
@@ -98,7 +96,7 @@ func (f Flag) Match(args Args) (mr MatchResult) {
 			return f.matchResult(true, p, _args, args.Pop())
 		}
 	}
-	for _, l := range f.Shorts {
+	for _, l := range f.shorts {
 		_args := args.Clone()
 		p := ShortParser{Short: l, CanUnary: true}
 		if p.Match(_args) {
@@ -111,4 +109,16 @@ func (f Flag) Match(args Args) (mr MatchResult) {
 		}
 	}
 	return noMatch
+}
+
+type flagMaker struct {
+	switchesMaker
+	target *bool
+}
+
+func (m flagMaker) Make() Flag {
+	return Flag{
+		Value:        m.target,
+		switchesOpts: m.switchesMaker.switchesOpts,
+	}
 }

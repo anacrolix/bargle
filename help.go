@@ -18,6 +18,7 @@ type ParamHelp struct {
 	Forms       []string
 	Description string
 	Values      string
+	Default     string
 	Options     []ParamHelp
 	Subcommand  commandHelp
 }

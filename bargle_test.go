@@ -16,13 +16,29 @@ func init() {
 
 func TestParseFlagNoArgs(t *testing.T) {
 	ctx := NewContext(nil)
-	f := Flag{}
-	f.AddLong("debug").AddShort('s')
-	err := ctx.Run(Command{Options: []Param{&f}, DefaultAction: func() error {
+	f := NewFlag(nil)
+	f.AddLong("debug")
+	f.AddShort('s')
+	err := ctx.Run(Command{Options: []Param{f.Make()}, DefaultAction: func() error {
 		// Do nothing? Hm...
 		return nil
 	}})
 	qt.Assert(t, err, qt.IsNil)
+}
+
+func TestParseFlagNoTarget(t *testing.T) {
+	ctx := NewContext([]string{"-s"})
+	fm := NewFlag(nil)
+	fm.AddLong("debug")
+	fm.AddShort('s')
+	f := fm.Make()
+	err := ctx.Run(Command{Options: []Param{f}, DefaultAction: func() error {
+		// Do nothing? Hm...
+		return nil
+	}})
+	c := qt.New(t)
+	c.Assert(err, qt.IsNil)
+	c.Check(*f.Value, qt.IsTrue)
 }
 
 func TestUnhandledExitCode(t *testing.T) {
@@ -77,4 +93,20 @@ func TestUnmarshalPointer(t *testing.T) {
 	err = uf.UnaryUnmarshal("4M")
 	c.Assert(err, qt.IsNil)
 	c.Check(pab.Int64(), qt.Equals, int64(4_000_000))
+}
+
+func TestFromStructDefaults(t *testing.T) {
+	c := qt.New(t)
+	var struct_ struct {
+		DefaultTrue bool `default:"true"`
+		NoDefault   bool
+		Default420  string   `default:"420"`
+		SetManually []string `default:"world"`
+	}
+	struct_.SetManually = append(struct_.SetManually, "hello")
+	FromStruct(&struct_)
+	c.Check(struct_.DefaultTrue, qt.IsTrue)
+	c.Check(struct_.NoDefault, qt.IsFalse)
+	c.Check(struct_.Default420, qt.Equals, "420")
+	c.Check(struct_.SetManually, qt.DeepEquals, []string{"hello", "world"})
 }

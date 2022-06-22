@@ -28,7 +28,7 @@ func FromStruct(target interface{}) (cmd Command) {
 			return unmarshaler
 		}
 		if argTag == "positional" {
-			param = &Positional[any]{
+			param = &Positional{
 				Name:  fmt.Sprintf("%v.%v", type_.Name(), structField.Name),
 				Desc:  structField.Tag.Get("help"),
 				Value: getUnmarshaler(),
@@ -38,20 +38,16 @@ func FromStruct(target interface{}) (cmd Command) {
 			longs := []string{xstrings.ToKebabCase(structField.Name)}
 			switch typedTarget := target.(type) {
 			case *bool:
-				param = &Flag{
-					Value: typedTarget,
-					Longs: longs,
-				}
-				cmd.Options = append(cmd.Options)
+				flag := NewFlag(typedTarget)
+				flag.AddLongs(longs...)
+				param = flag.Make()
 			default:
-				option := &UnaryOption[any]{
-					Value: getUnmarshaler(),
-					Longs: longs,
-				}
+				option := NewUnaryOption(getUnmarshaler())
+				option.AddLongs(longs...)
 				if arity == "+" {
-					option.Required = true
+					option.SetRequired()
 				}
-				param = option
+				param = option.Make()
 			}
 			cmd.Options = append(cmd.Options, param)
 		}

@@ -69,3 +69,24 @@ func (f Switch) AfterParse(ctx Context) error {
 	}
 	return f.AfterParseFunc(ctx)
 }
+
+type switchesOpts struct {
+	longs  []string
+	shorts []rune
+}
+
+type switchesMaker struct {
+	switchesOpts
+}
+
+func (me *switchesMaker) AddLong(l string) {
+	me.longs = append(me.longs, l)
+}
+
+func (me *switchesMaker) AddLongs(l ...string) {
+	me.longs = append(me.longs, l...)
+}
+
+func (me *switchesMaker) AddShort(s rune) {
+	me.shorts = append(me.shorts, s)
+}

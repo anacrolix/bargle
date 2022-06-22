@@ -45,10 +45,10 @@ func (me HelpCommand) AddToCommand(cmd *Command) {
 	}
 	sub.Desc = "help with subcommands"
 	recurse := &Flag{
-		Longs:  []string{"recurse"},
-		Shorts: []rune{'r'},
-		Value:  new(bool),
+		Value: new(bool),
 	}
+	recurse.longs = []string{"recurse"}
+	recurse.shorts = []rune{'r'}
 	sub.Options = append(sub.Options, recurse)
 	cmd.Positionals = append(cmd.Positionals, &sub)
 	addHelpSubcommands(&sub, cmd, recurse.Value)

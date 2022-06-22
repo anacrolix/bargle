@@ -2,78 +2,67 @@ package bargle
 
 import (
 	"fmt"
+
+	"github.com/anacrolix/generics"
 )
 
-type UnaryOption[T any] struct {
+type UnaryOption struct {
 	optionDefaults
-	Value    UnaryUnmarshaler[T]
-	Longs    []string
-	Shorts   []rune
+	unaryOptionOpts
+	switchesOpts
+	parsed bool
+}
+
+type unaryOptionOpts struct {
 	Required bool
-	parsed   bool
+	Value    UnaryUnmarshaler
 }
 
-func NewUnaryOption[T any](target *T) *UnaryOption[T] {
-	ret := &UnaryOption[T]{}
-	initNilUnmarshalerUsingReflect(&ret.Value, target)
-	return ret
-}
-
-func (me *UnaryOption[T]) SetRequired() *UnaryOption[T] {
+func (me *unaryOptionMaker) SetRequired() *unaryOptionMaker {
 	me.Required = true
 	return me
 }
 
-func (me *UnaryOption[T]) Init() error {
-	return initNilUnmarshalerUsingReflect(&me.Value, nil)
+func (me *UnaryOption) Init() error {
+	return initNilUnmarshalerUsingReflect[struct{}](&me.Value, nil)
 }
 
-func (me *UnaryOption[T]) switchForms() (ret []string) {
-	for _, l := range me.Longs {
+func (me *UnaryOption) switchForms() (ret []string) {
+	for _, l := range me.longs {
 		ret = append(ret, "--"+l)
 	}
-	for _, s := range me.Shorts {
+	for _, s := range me.shorts {
 		ret = append(ret, "-"+string(s))
 	}
 	return
 }
 
-func (me *UnaryOption[T]) Help() ParamHelp {
+func (me *UnaryOption) Help() ParamHelp {
 	return ParamHelp{
 		Forms:  me.switchForms(),
 		Values: me.Value.TargetHelp(),
 	}
 }
 
-func (me *UnaryOption[T]) AfterParse(Context) error {
+func (me *UnaryOption) AfterParse(Context) error {
 	me.parsed = true
 	return nil
 }
 
-func (me *UnaryOption[T]) Satisfied() bool {
+func (me *UnaryOption) Satisfied() bool {
 	return !me.Required || me.parsed
 }
 
-func (me *UnaryOption[T]) AddLong(long string) *UnaryOption[T] {
-	me.Longs = append(me.Longs, long)
-	return me
-}
-
-func (me *UnaryOption[T]) AddShort(short rune) *UnaryOption[T] {
-	me.Shorts = append(me.Shorts, short)
-	return me
-}
-
-func (me *UnaryOption[T]) Match(args Args) MatchResult {
+func (me *UnaryOption) Match(args Args) MatchResult {
 	return me.matchSwitch(args)
 }
 
-type unaryMatchResult[T any] struct {
+type unaryMatchResult struct {
 	baseMatchResult
-	u UnaryUnmarshaler[T]
+	u UnaryUnmarshaler
 }
 
-func (me unaryMatchResult[T]) Parse(args Args) error {
+func (me unaryMatchResult) Parse(args Args) error {
 	if args.Len() == 0 {
 		return missingArgument
 	}
@@ -85,24 +74,54 @@ func (me unaryMatchResult[T]) Parse(args Args) error {
 	return err
 }
 
-func (me *UnaryOption[T]) matchSwitch(args Args) MatchResult {
-	for _, l := range me.Longs {
+func (me *UnaryOption) matchSwitch(args Args) MatchResult {
+	for _, l := range me.longs {
 		_args := args.Clone()
 		gv := &LongParser{Long: l, CanUnary: true}
 		if gv.Match(_args) {
-			return unaryMatchResult[T]{baseMatchResult{_args, me, args.Clone().Pop()}, me.Value}
+			return unaryMatchResult{baseMatchResult{_args, me, args.Clone().Pop()}, me.Value}
 		}
 	}
-	for _, s := range me.Shorts {
+	for _, s := range me.shorts {
 		_args := args.Clone()
 		gv := &ShortParser{Short: s, CanUnary: true}
 		if gv.Match(_args) {
-			return unaryMatchResult[T]{baseMatchResult{_args, me, args.Clone().Pop()}, me.Value}
+			return unaryMatchResult{baseMatchResult{_args, me, args.Clone().Pop()}, me.Value}
 		}
 	}
 	return noMatch
 }
 
-func (me *UnaryOption[T]) Parse(args Args) error {
+func (me *UnaryOption) Parse(args Args) error {
 	return me.Value.UnaryUnmarshal(args.Pop())
+}
+
+type unaryOptionMaker struct {
+	unaryOptionOpts
+	switchesMaker
+	default_ generics.Option[string]
+}
+
+func (me *unaryOptionMaker) SetDefault(default_ string) {
+	me.default_ = generics.Some(default_)
+}
+
+func NewUnaryOption(u UnaryUnmarshaler) *unaryOptionMaker {
+	ret := &unaryOptionMaker{}
+	ret.Value = u
+	return ret
+}
+
+func (me *unaryOptionMaker) Make() *UnaryOption {
+	if me.default_.Ok {
+		err := me.Value.UnaryUnmarshal(me.default_.Value)
+		if err != nil {
+			err = fmt.Errorf("unmarshaling default: %w", err)
+			panic(err)
+		}
+	}
+	return &UnaryOption{
+		unaryOptionOpts: me.unaryOptionOpts,
+		switchesOpts:    me.switchesOpts,
+	}
 }

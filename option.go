@@ -4,22 +4,23 @@ import (
 	"github.com/anacrolix/generics"
 )
 
-func NewOption[T any](target *generics.Option[T], u UnaryUnmarshaler[T]) Option[T] {
+func NewOption[T any](target *generics.Option[T], u UnaryUnmarshaler) Option[T] {
 	ret := Option[T]{
 		TargetOk:    &target.Ok,
-		TargetValue: u,
+		TargetValue: &target.Value,
 	}
-	initNilUnmarshalerUsingReflect(&ret.TargetValue, &target.Value)
+	initNilUnmarshalerUsingReflect(&ret.ValueUnmarshaler, &target.Value)
 	return ret
 }
 
 type Option[T any] struct {
-	TargetOk    *bool
-	TargetValue UnaryUnmarshaler[T]
+	TargetOk         *bool
+	TargetValue      *T
+	ValueUnmarshaler UnaryUnmarshaler
 }
 
 func (o Option[T]) UnaryUnmarshal(s string) error {
-	err := o.TargetValue.UnaryUnmarshal(s)
+	err := o.ValueUnmarshaler.UnaryUnmarshal(s)
 	if err != nil {
 		return err
 	}
@@ -28,7 +29,7 @@ func (o Option[T]) UnaryUnmarshal(s string) error {
 }
 
 func (o Option[T]) TargetHelp() string {
-	return o.TargetValue.TargetHelp()
+	return o.ValueUnmarshaler.TargetHelp()
 }
 
 func (me Option[T]) Matching() bool {
@@ -38,6 +39,6 @@ func (me Option[T]) Matching() bool {
 func (me Option[T]) Value() generics.Option[T] {
 	return generics.Option[T]{
 		Ok:    *me.TargetOk,
-		Value: me.TargetValue.Value(),
+		Value: *me.TargetValue,
 	}
 }

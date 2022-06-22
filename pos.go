@@ -4,28 +4,28 @@ import (
 	"fmt"
 )
 
-type Positional[T any] struct {
+type Positional struct {
 	posDefaults
-	Value          UnaryUnmarshaler[T]
+	Value          UnaryUnmarshaler
 	Name           string
 	Desc           string
 	ok             bool
 	AfterParseFunc AfterParseParamFunc
 }
 
-func (me *Positional[T]) Init() error {
-	return initNilUnmarshalerUsingReflect(&me.Value, nil)
+func (me *Positional) Init() error {
+	return initNilUnmarshalerUsingReflect[struct{}](&me.Value, nil)
 }
 
-func (me *Positional[T]) Parse(args Args) error {
+func (me *Positional) Parse(args Args) error {
 	return me.Value.UnaryUnmarshal(args.Pop())
 }
 
-func (me *Positional[T]) Match(args Args) MatchResult {
+func (me *Positional) Match(args Args) MatchResult {
 	if !me.Value.Matching() {
 		return noMatch
 	}
-	mr := unaryMatchResult[T]{
+	mr := unaryMatchResult{
 		u: me.Value,
 	}
 	mr.args = args.Clone()
@@ -34,7 +34,7 @@ func (me *Positional[T]) Match(args Args) MatchResult {
 	return mr
 }
 
-func (me *Positional[T]) AfterParse(ctx Context) error {
+func (me *Positional) AfterParse(ctx Context) error {
 	me.ok = true
 	if me.AfterParseFunc != nil {
 		return me.AfterParseFunc(ctx)
@@ -42,11 +42,11 @@ func (me *Positional[T]) AfterParse(ctx Context) error {
 	return nil
 }
 
-func (me *Positional[T]) Satisfied() bool {
+func (me *Positional) Satisfied() bool {
 	return me.ok
 }
 
-func (me *Positional[T]) Help() ParamHelp {
+func (me *Positional) Help() ParamHelp {
 	return ParamHelp{
 		Forms:       []string{fmt.Sprintf("<%v>", me.Name)},
 		Values:      me.Value.TargetHelp(),
@@ -64,6 +64,6 @@ func (me *Positional[T]) Help() ParamHelp {
 //	return doUnaryUnmarshal(ctx.Args().Pop(), &me.Value, me.Value)
 //}
 
-func NewPositional[T any](u UnaryUnmarshaler[T]) *Positional[T] {
-	return &Positional[T]{Value: u, Name: "arg"}
+func NewPositional(u UnaryUnmarshaler) *Positional {
+	return &Positional{Value: u, Name: "arg"}
 }

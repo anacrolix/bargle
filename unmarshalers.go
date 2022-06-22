@@ -9,9 +9,9 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-type UnaryUnmarshaler[T any] interface {
+type UnaryUnmarshaler interface {
 	UnaryUnmarshal(s string) error
-	Value() T
+	//CurrentValue() string
 	TargetHelp() string
 	Matching() bool
 }
@@ -35,7 +35,8 @@ func parseIntType[R constraints.Integer, I constraints.Integer](s string, bits i
 
 type Slice[T any] struct {
 	value       *[]T
-	Unmarshaler UnaryUnmarshaler[T]
+	Unmarshaler UnaryUnmarshaler
+	elemTarget  *T
 }
 
 func (s2 Slice[T]) TargetHelp() string {
@@ -47,7 +48,7 @@ func (sl Slice[T]) UnaryUnmarshal(s string) error {
 	if err != nil {
 		return err
 	}
-	*sl.value = append(*sl.value, sl.Unmarshaler.Value())
+	*sl.value = append(*sl.value, *sl.elemTarget)
 	return nil
 }
 
@@ -56,7 +57,7 @@ type String struct {
 	Ok     bool
 }
 
-var _ UnaryUnmarshaler[string] = (*String)(nil)
+var _ UnaryUnmarshaler = (*String)(nil)
 
 func (me String) Value() string {
 	return *me.Target
@@ -141,7 +142,7 @@ func makeAnyUnaryUnmarshalerViaReflection(target any) (anyUnaryUnmarshaler, erro
 				if err != nil {
 					return err
 				}
-				targetValue.Set(reflect.Append(targetValue, reflect.ValueOf(eu.Value())))
+				targetValue.Set(reflect.Append(targetValue, elemTarget.Elem()))
 				return nil
 			},
 			target: target,
@@ -177,21 +178,17 @@ func makeAnyUnaryUnmarshalerViaReflection(target any) (anyUnaryUnmarshaler, erro
 
 type unaryUnmarshalerWithUnmarshalFunc[T any] struct {
 	uf func(string) error
-	UnaryUnmarshaler[T]
+	UnaryUnmarshaler
 }
 
 func (me unaryUnmarshalerWithUnmarshalFunc[T]) UnaryUnmarshal(s string) error {
 	return me.uf(s)
 }
 
-type anyUnaryUnmarshaler = UnaryUnmarshaler[any]
+type anyUnaryUnmarshaler = UnaryUnmarshaler
 
 type typedToAnyUnaryUnmarshalerWrapper[T any] struct {
-	UnaryUnmarshaler[T]
-}
-
-func (me typedToAnyUnaryUnmarshalerWrapper[T]) Value() any {
-	return me.UnaryUnmarshaler.Value()
+	UnaryUnmarshaler
 }
 
 type unaryUnmarshalerWrapperAnyToTyped[T any] struct {
@@ -202,11 +199,15 @@ func (me unaryUnmarshalerWrapperAnyToTyped[T]) UnaryUnmarshal(s string) error {
 	return me.anyUnaryUnmarshaler.UnaryUnmarshal(s)
 }
 
-func (me unaryUnmarshalerWrapperAnyToTyped[T]) Value() T {
-	return me.anyUnaryUnmarshaler.Value().(T)
+func AutoUnmarshaler[T any](t *T) (u UnaryUnmarshaler) {
+	err := initNilUnmarshalerUsingReflect(&u, t)
+	if err != nil {
+		panic(err)
+	}
+	return
 }
 
-func initNilUnmarshalerUsingReflect[T any](u *UnaryUnmarshaler[T], t *T) error {
+func initNilUnmarshalerUsingReflect[T any](u *UnaryUnmarshaler, t *T) error {
 	if *u != nil {
 		return nil
 	}

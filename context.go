@@ -117,6 +117,9 @@ options:
 	if err != nil {
 		return err
 	}
+	if cmd.AfterParseFunc != nil {
+		cmd.AfterParseFunc(ctx)
+	}
 	if !ranSubCmd {
 		if cmd.DefaultAction != nil {
 			*ctx.actions = append(*ctx.actions, cmd.DefaultAction)

@@ -5,8 +5,9 @@ import (
 )
 
 type Command struct {
-	Options     []Param
-	Positionals []Param
+	Options        []Param
+	Positionals    []Param
+	AfterParseFunc AfterParseParamFunc
 	// Action taken if no subcommand is invoked.
 	DefaultAction func() error
 	Desc          string

@@ -80,6 +80,7 @@ type switchesMaker struct {
 }
 
 func (me *switchesMaker) AddLong(l string) {
+	// Apply a config for a transformation like kebab case.
 	me.longs = append(me.longs, l)
 }
 

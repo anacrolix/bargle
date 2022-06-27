@@ -126,6 +126,12 @@ func makeAnyUnaryUnmarshalerViaReflection(target any) (anyUnaryUnmarshaler, erro
 			*p = uint16(u64)
 			return err
 		}), nil
+	case *int64:
+		return makeSimpleAnyUnaryUnmarshalFromFunc(p, func(s string) error {
+			i64, err := strconv.ParseInt(s, 0, 64)
+			*p = i64
+			return err
+		}), nil
 	}
 	targetPtrValue := reflect.ValueOf(target)
 	targetValue := targetPtrValue.Elem()

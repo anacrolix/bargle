@@ -26,7 +26,7 @@ type builtinUnaryUnmarshalTarget interface {
 
 type BuiltinUnaryUnmarshaler[T builtinUnaryUnmarshalTarget] struct{}
 
-func parseIntType[R constraints.Integer, I constraints.Integer](s string, bits int, f func(string, int, int) (I, error)) (ret R, err error) {
+func parseIntType[R, I constraints.Integer](s string, bits int, f strconvParseIntFunc[I]) (ret R, err error) {
 	var i I
 	i, err = f(s, 0, bits)
 	ret = R(i)
@@ -98,40 +98,31 @@ func makeSimpleAnyUnaryUnmarshalFromFunc[T any](target T, u func(string) error) 
 	}
 }
 
+type strconvParseIntFunc[I any] func(string, int, int) (I, error)
+
+func makeIntUnaryUnmarshaler[T, I constraints.Integer](p *T, bits int, intFunc strconvParseIntFunc[I]) (anyUnaryUnmarshaler, error) {
+	return makeSimpleAnyUnaryUnmarshalFromFunc(p, func(s string) (err error) {
+		*p, err = parseIntType[T](s, bits, intFunc)
+		return
+	}), nil
+}
+
 // Does a unary unmarshal, trying to infer a default unmarshaler if necessary.
 func makeAnyUnaryUnmarshalerViaReflection(target any) (anyUnaryUnmarshaler, error) {
 	if tu, ok := target.(encoding.TextUnmarshaler); ok {
 		return makeSimpleAnyUnaryUnmarshalFromFunc(target, func(s string) error {
 			return tu.UnmarshalText([]byte(s))
 		}), nil
-		//done := false
-		//return unaryUnmarshalerFunc[any]{
-		//	u: func(s string) error {
-		//		done = true
-		//		return tu.UnmarshalText([]byte(s))
-		//	},
-		//	target: target,
-		//	matching: func() bool {
-		//		return !done
-		//	},
-		//	help: fmt.Sprintf("(%T)", target),
-		//}, nil
 	}
 	switch p := target.(type) {
 	case *string:
 		return typedToAnyUnaryUnmarshalerWrapper[string]{&String{Target: p}}, nil
 	case *uint16:
-		return makeSimpleAnyUnaryUnmarshalFromFunc(p, func(s string) error {
-			u64, err := strconv.ParseUint(s, 0, 16)
-			*p = uint16(u64)
-			return err
-		}), nil
+		return makeIntUnaryUnmarshaler(p, 16, strconv.ParseUint)
 	case *int64:
-		return makeSimpleAnyUnaryUnmarshalFromFunc(p, func(s string) error {
-			i64, err := strconv.ParseInt(s, 0, 64)
-			*p = i64
-			return err
-		}), nil
+		return makeIntUnaryUnmarshaler(p, 64, strconv.ParseInt)
+	case *int:
+		return makeIntUnaryUnmarshaler(p, 0, strconv.ParseInt)
 	}
 	targetPtrValue := reflect.ValueOf(target)
 	targetValue := targetPtrValue.Elem()

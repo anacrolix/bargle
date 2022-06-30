@@ -176,6 +176,7 @@ func (me *context) Defer(f func()) {
 	*me.deferred = append(*me.deferred, f)
 }
 
+// Appends an action for execution after parsing is completed and all previous actions are successful.
 func (me *context) AfterParse(f func() error) {
 	*me.actions = append(*me.actions, f)
 }

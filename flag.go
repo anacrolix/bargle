@@ -10,16 +10,43 @@ import (
 // parse from a bound value in the same argument (with '=').
 type Flag struct {
 	optionDefaults
-	Value *bool
+	target flagTarget
 	switchesOpts
 }
 
-func NewFlag(target *bool) *flagMaker {
+type boolTarget struct {
+	target *bool
+}
+
+func (b boolTarget) Set(value bool) {
+	*b.target = value
+}
+
+type boolPtrTarget struct {
+	target **bool
+}
+
+func (b boolPtrTarget) Set(value bool) {
+	if *b.target == nil {
+		*b.target = new(bool)
+	}
+	**b.target = value
+}
+
+func NewFlag(target any) *flagMaker {
 	if target == nil {
 		target = new(bool)
 	}
 	return &flagMaker{
-		target: target,
+		target: func() flagTarget {
+			switch typedTarget := target.(type) {
+			case *bool:
+				return boolTarget{typedTarget}
+			case **bool:
+				return boolPtrTarget{typedTarget}
+			}
+			panic("unsupported target type")
+		}(),
 	}
 }
 
@@ -28,8 +55,12 @@ func (f Flag) Init() error {
 }
 
 func (f Flag) Parse(args Args) (err error) {
-	*f.Value, err = strconv.ParseBool(args.Pop())
-	return
+	value, err := strconv.ParseBool(args.Pop())
+	if err != nil {
+		return
+	}
+	f.target.Set(value)
+	return nil
 }
 
 func (f Flag) Help() ParamHelp {
@@ -52,7 +83,7 @@ func (f *Flag) matchResult(no bool, us UnarySwitch, args Args, matchedArg string
 			param: f,
 			match: matchedArg,
 		},
-		target: f.Value,
+		target: f.target,
 		no:     no,
 	}
 	if us.GotValue() {
@@ -61,22 +92,32 @@ func (f *Flag) matchResult(no bool, us UnarySwitch, args Args, matchedArg string
 	return mr
 }
 
+type flagTarget interface {
+	Set(bool)
+}
+
 type flagMatchResult struct {
 	baseMatchResult
 	value  generics.Option[string]
-	target *bool
+	target flagTarget
 	no     bool
 }
 
 func (f flagMatchResult) Parse(Args) (err error) {
-	if f.value.Ok {
-		*f.target, err = strconv.ParseBool(f.value.Value)
-	} else {
-		*f.target = true
+	value, err := func() (value bool, err error) {
+		if f.value.Ok {
+			return strconv.ParseBool(f.value.Value)
+		} else {
+			return true, nil
+		}
+	}()
+	if err != nil {
+		return
 	}
 	if f.no {
-		*f.target = !*f.target
+		value = !value
 	}
+	f.target.Set(value)
 	return
 
 }
@@ -113,12 +154,12 @@ func (f Flag) Match(args Args) (mr MatchResult) {
 
 type flagMaker struct {
 	switchesMaker
-	target *bool
+	target flagTarget
 }
 
 func (m flagMaker) Make() Flag {
 	return Flag{
-		Value:        m.target,
+		target:       m.target,
 		switchesOpts: m.switchesMaker.switchesOpts,
 	}
 }

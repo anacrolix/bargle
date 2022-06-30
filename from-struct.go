@@ -37,9 +37,9 @@ func FromStruct(target interface{}) (cmd Command) {
 			cmd.Positionals = append(cmd.Positionals, param)
 		} else {
 			longs := []string{xstrings.ToKebabCase(structField.Name)}
-			switch typedTarget := target.(type) {
-			case *bool:
-				flag := NewFlag(typedTarget)
+			switch target.(type) {
+			case *bool, **bool:
+				flag := NewFlag(target)
 				flag.AddLongs(longs...)
 				param = flag.Make()
 			default:

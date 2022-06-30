@@ -44,14 +44,15 @@ func (me HelpCommand) AddToCommand(cmd *Command) {
 		Name: "help",
 	}
 	sub.Desc = "help with subcommands"
-	recurse := &Flag{
-		Value: new(bool),
+	var recurse bool
+	{
+		recurse := NewFlag(&recurse)
+		recurse.AddLong("recurse")
+		recurse.AddShort('r')
+		sub.Options = append(sub.Options, recurse.Make())
 	}
-	recurse.longs = []string{"recurse"}
-	recurse.shorts = []rune{'r'}
-	sub.Options = append(sub.Options, recurse)
 	// TODO: Somehow make help return that it takes a sequence of subcommands, but not actually recurse or list them.
-	addHelpSubcommands(&sub, cmd, recurse.Value)
+	addHelpSubcommands(&sub, cmd, &recurse)
 	cmd.Positionals = append(cmd.Positionals, &sub)
 }
 

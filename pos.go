@@ -14,7 +14,7 @@ type Positional struct {
 }
 
 func (me *Positional) Init() error {
-	return initNilUnmarshalerUsingReflect[struct{}](&me.Value, nil)
+	return nil
 }
 
 func (me *Positional) Parse(args Args) error {

@@ -25,7 +25,7 @@ func (me *unaryOptionMaker) SetRequired() *unaryOptionMaker {
 }
 
 func (me *UnaryOption) Init() error {
-	return initNilUnmarshalerUsingReflect[struct{}](&me.Value, nil)
+	return nil
 }
 
 func (me *UnaryOption) switchForms() (ret []string) {
@@ -110,6 +110,9 @@ func (me *unaryOptionMaker) SetDefault(default_ string) {
 }
 
 func NewUnaryOption(u UnaryUnmarshaler) *unaryOptionMaker {
+	if u == nil {
+		panic("nil UnaryUnmarshaler")
+	}
 	ret := &unaryOptionMaker{}
 	ret.Value = u
 	return ret

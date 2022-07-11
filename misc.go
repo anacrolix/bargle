@@ -26,3 +26,9 @@ func recoverErrorAs[T error](with func(t T)) {
 		}
 	})
 }
+
+func runDeferred(deferred []func()) {
+	for i := range deferred {
+		deferred[len(deferred)-1-i]()
+	}
+}

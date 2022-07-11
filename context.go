@@ -34,9 +34,7 @@ func (me *context) Args() Args {
 
 func (ctx *context) Run(cmd Command) (err error) {
 	defer func() {
-		for i := range *ctx.deferred {
-			(*ctx.deferred)[len(*ctx.deferred)-1-i]()
-		}
+		runDeferred(*ctx.deferred)
 	}()
 	err = cmd.Init()
 	if err != nil {

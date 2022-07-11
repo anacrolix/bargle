@@ -17,12 +17,14 @@ func (me *Main) Defer(f func()) {
 	me.deferred = append(me.deferred, f)
 }
 
+// Runs the command then exits with an appropriate exit code. There is no return from this function.
 func (me *Main) Run() {
 	ctx := NewContext(os.Args[1:])
 	if me.Command.HasSubcommands() && !me.NoDefaultHelpSubcommand {
 		HelpCommand{}.AddToCommand(&me.Command)
 	}
 	err := ctx.Run(me.Command)
+	runDeferred(me.deferred)
 	if err != nil {
 		if me.OnError != nil {
 			me.OnError(err)

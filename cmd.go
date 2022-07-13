@@ -4,13 +4,21 @@ import (
 	"fmt"
 )
 
+// A Command represents a collection of parameters and behaviour that are parsed together. Some parameters might
+// themselves be Commands that are parsed recursively.
 type Command struct {
-	Options        []Param
-	Positionals    []Param
+	// Parameters that can be parsed as matched.
+	Options []Param
+	// Parameters that are parsed in order.
+	Positionals []Param
+	// A function executed after this command is parsed. Parsing is not yet complete, so any actions should be deferred
+	// from this callback.
 	AfterParseFunc AfterParseParamFunc
-	// Action taken if no subcommand is invoked.
+	// Action taken if no subcommand is invoked. If there are subcommands, and none is chosen and there is no
+	// DefaultAction, parsing fails.
 	DefaultAction func() error
-	Desc          string
+	// A human description of what this command does.
+	Desc string
 }
 
 func (me Command) Init() error {

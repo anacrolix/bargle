@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// Creates a new Parser bound to the system-level arguments.
 func NewParser() *Parser {
 	return &Parser{
 		args:   os.Args[1:],
@@ -12,12 +13,15 @@ func NewParser() *Parser {
 	}
 }
 
+// A parser for a sequence of strings.
 type Parser struct {
 	args   []string
 	err    error
 	helper Helper
 }
 
+// Parse the given parameter, if we're in the right state. Returns true if it matched, and sets an
+// error if it matched and failed to unmarshal.
 func (p *Parser) Parse(arg Arg) (matched bool) {
 	defer func() {
 		p.helper.Parsed(ParseAttempt{
@@ -56,6 +60,8 @@ func (p *Parser) Fail() error {
 	return p.err
 }
 
+// This asserts that no arguments remain, and if they do sets an appropriate error. You would call
+// this when you're ready to start actual work after parsing, and then check Parser.Ok().
 func (p *Parser) FailIfArgsRemain() {
 	if p.err != nil {
 		return
@@ -72,6 +78,8 @@ func (p *Parser) FailIfArgsRemain() {
 	}
 }
 
+// Removes and returns all remaining unused arguments. This might be used to pass handling on to
+// something else, or to process the rest of the arguments manually.
 func (p *Parser) PopAll() (all []string) {
 	if p.err != nil {
 		return nil
@@ -81,10 +89,14 @@ func (p *Parser) PopAll() (all []string) {
 	return
 }
 
+// Returns false if there's an error, or help has been issued. You would normally then return
+// Parser.Err(), which may be nil.
 func (p *Parser) Ok() bool {
 	return !p.helper.Helping() && p.Err() == nil
 }
 
+// Returns any error the Parser has encountered. Usually this is the first error and blocks further
+// parsing until it's convenient to handle it.
 func (p *Parser) Err() error {
 	return p.err
 }

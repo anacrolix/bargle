@@ -10,7 +10,7 @@ import (
 type builtinHelper struct {
 	helping        bool
 	globalArgs     map[Arg]struct{}
-	unmatchedArgs  []Arg
+	unmatchedArgs  map[ArgType][]Arg
 	parser         Arg
 	initParserOnce sync.Once
 }
@@ -30,11 +30,26 @@ func (b *builtinHelper) printArg(arg Arg) {
 	fmt.Println(generics.ConvertToSliceOfAny(arg.ArgInfo().MatchingForms)...)
 }
 
-func (b *builtinHelper) DoHelp() {
+func (b *builtinHelper) globalArgsSlice() (slice []Arg) {
 	for arg := range b.globalArgs {
-		b.printArg(arg)
+		slice = append(slice, arg)
 	}
-	for _, arg := range b.unmatchedArgs {
+	return
+}
+
+func (b *builtinHelper) DoHelp() {
+	b.printArgBlock(ArgTypeEnvVar, "Environment variables:", b.globalArgsSlice())
+	b.printArgBlock(ArgTypeSwitch, "Switches:", b.unmatchedArgs[ArgTypeSwitch])
+	b.printArgBlock(ArgTypeSwitch, "Positional:", b.unmatchedArgs[ArgTypePos])
+}
+
+func (b *builtinHelper) printArgBlock(argType ArgType, header string, args []Arg) {
+	if len(args) == 0 {
+		return
+	}
+	fmt.Println(header)
+	for _, arg := range args {
+		fmt.Print("  ")
 		b.printArg(arg)
 	}
 }
@@ -45,16 +60,20 @@ func (b *builtinHelper) Parse(ctx ParseContext) bool {
 }
 
 func (b *builtinHelper) Parsed(attempt ParseAttempt) {
-	if attempt.Arg.ArgInfo().Global {
+	arg := attempt.Arg
+	argInfo := arg.ArgInfo()
+	argType := argInfo.ArgType
+	if argInfo.Global {
 		if b.globalArgs == nil {
 			b.globalArgs = make(map[Arg]struct{})
 		}
-		b.globalArgs[attempt.Arg] = struct{}{}
+		b.globalArgs[arg] = struct{}{}
 	} else {
-		b.unmatchedArgs = append(b.unmatchedArgs, attempt.Arg)
+		generics.MakeMapIfNil(&b.unmatchedArgs)
+		b.unmatchedArgs[argType] = append(b.unmatchedArgs[argType], arg)
 	}
 	if attempt.Matched {
-		b.unmatchedArgs = b.unmatchedArgs[:0]
+		b.unmatchedArgs = nil
 	}
 }
 

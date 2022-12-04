@@ -1,16 +1,38 @@
 package args
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
-type Parser struct {
-	args []string
-	err  error
+func NewParser() *Parser {
+	return &Parser{
+		args:   os.Args[1:],
+		helper: &builtinHelper{},
+	}
 }
 
-func (p *Parser) Parse(arg Arg) bool {
+type Parser struct {
+	args   []string
+	err    error
+	helper Helper
+}
+
+func (p *Parser) Parse(arg Arg) (matched bool) {
+	defer func() {
+		p.helper.Parsed(ParseAttempt{
+			Arg:     arg,
+			Matched: matched,
+		})
+	}()
 	if p.err != nil {
 		return false
 	}
+	return p.parseInner(arg)
+}
+
+// This parses without checking for existing Parser error or sending messages.
+func (p *Parser) parseInner(arg Arg) (matched bool) {
 	pc := parseContext{
 		args: p.args,
 	}
@@ -38,6 +60,13 @@ func (p *Parser) FailIfArgsRemain() {
 	if p.err != nil {
 		return
 	}
+	if !p.helper.Helping() {
+		p.parseInner(p.helper)
+	}
+	if p.helper.Helping() {
+		p.helper.DoHelp()
+		return
+	}
 	if len(p.args) != 0 {
 		p.err = fmt.Errorf("unused argument: %q", p.args[0])
 	}
@@ -50,6 +79,10 @@ func (p *Parser) PopAll() (all []string) {
 	all = p.args
 	p.args = nil
 	return
+}
+
+func (p *Parser) Ok() bool {
+	return !p.helper.Helping() && p.Err() == nil
 }
 
 func (p *Parser) Err() error {

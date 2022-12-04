@@ -1,6 +1,11 @@
 package args
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/anacrolix/generics"
+)
 
 // An experiment with maybe allowing separators and key styling to be propagated from a config down
 // the track.
@@ -16,6 +21,13 @@ func Long(key string, u Unmarshaler) long {
 type long struct {
 	key string
 	u   Unmarshaler
+}
+
+func (me long) ArgInfo() ArgInfo {
+	return ArgInfo{
+		MatchingForms: generics.Singleton(fmt.Sprintf("--%[1]s=value, --%[1]s value", me.key)),
+		ArgType:       ArgTypeSwitch,
+	}
 }
 
 func (me long) Parse(ctx ParseContext) bool {

@@ -1,4 +1,4 @@
-package args
+package bargle
 
 type Unmarshaler interface {
 	Unmarshal(ctx UnmarshalContext) error

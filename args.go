@@ -1,4 +1,4 @@
-package args
+package bargle
 
 type Arg interface {
 	Parse(ctx ParseContext) bool

@@ -1,4 +1,4 @@
-package args
+package bargle
 
 type ParseContext interface {
 	Pop() (string, bool)

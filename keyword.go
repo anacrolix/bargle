@@ -1,4 +1,4 @@
-package args
+package bargle
 
 import "github.com/anacrolix/generics"
 

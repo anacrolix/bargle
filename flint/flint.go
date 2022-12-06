@@ -19,17 +19,17 @@ type sub struct {
 
 type pos struct {
 	name     string
-	arg      args.Arg
+	arg      bargle.Arg
 	required bool
 }
 
 type parsedStruct struct {
-	options []args.Arg
+	options []bargle.Arg
 	pos     []pos
 	subs    []sub
 }
 
-func (ps parsedStruct) Run(p *args.Parser) {
+func (ps parsedStruct) Run(p *bargle.Parser) {
 opts:
 	for _, opt := range ps.options {
 		if p.Parse(opt) {
@@ -43,7 +43,7 @@ opts:
 		}
 	}
 	for _, sub := range ps.subs {
-		if p.Parse(args.Keyword(sub.key)) {
+		if p.Parse(bargle.Keyword(sub.key)) {
 			sub.cmd.Run(p)
 			sub.setOnParse.Set(sub.newStructPtr)
 			break
@@ -51,7 +51,7 @@ opts:
 	}
 }
 
-func processStruct(s any, p *args.Parser) (ret parsedStruct) {
+func processStruct(s any, p *bargle.Parser) (ret parsedStruct) {
 	v := reflect.ValueOf(s).Elem()
 	structType := v.Type()
 	for i := 0; i < v.NumField(); i++ {
@@ -73,7 +73,7 @@ func processStruct(s any, p *args.Parser) (ret parsedStruct) {
 		}
 		t := v.Field(i).Addr().Interface()
 		fieldPtrAny := v.Field(i).Addr().Interface()
-		u := args.BuiltinUnmarshalerFromAny(fieldPtrAny)
+		u := bargle.BuiltinUnmarshalerFromAny(fieldPtrAny)
 		if u == nil {
 			panic(fmt.Sprintf("unsupported type: %T", t))
 		}
@@ -83,12 +83,12 @@ func processStruct(s any, p *args.Parser) (ret parsedStruct) {
 			if parts[0] == "positional" {
 				ret.pos = append(ret.pos, pos{
 					name:     name,
-					arg:      args.Positional(u),
+					arg:      bargle.Positional(u),
 					required: required,
 				})
 			}
 		}
-		ret.options = append(ret.options, args.Long(name, u))
+		ret.options = append(ret.options, bargle.Long(name, u))
 		if value, ok := sf.Tag.Lookup("default"); ok {
 			p.SetDefault(u, value)
 		}
@@ -98,7 +98,7 @@ func processStruct(s any, p *args.Parser) (ret parsedStruct) {
 
 // Processes defaults and parses stuff in the struct per flint's implementation. I'm not sure how
 // you would mix positionals external to the struct with how this does it.
-func ParseStruct[T any](p *args.Parser, s *T) {
+func ParseStruct[T any](p *bargle.Parser, s *T) {
 	ps := processStruct(s, p)
 	ps.Run(p)
 }

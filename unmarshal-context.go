@@ -1,4 +1,4 @@
-package args
+package bargle
 
 type UnmarshalContext interface {
 	Pop() (string, error)

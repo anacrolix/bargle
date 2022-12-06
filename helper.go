@@ -1,4 +1,4 @@
-package args
+package bargle
 
 type Helper interface {
 	Arg

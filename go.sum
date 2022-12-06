@@ -1,5 +1,3 @@
-github.com/anacrolix/generics v0.0.0-20221120023709-a8e9af12da39 h1:bBXHFOYC/K3Q3jjI6M6HR/z/93mf1ZiyuM2gwhZknM8=
-github.com/anacrolix/generics v0.0.0-20221120023709-a8e9af12da39/go.mod h1:ff2rHB/joTV03aMSSn/AZNnaIpUw0h3njetGsaXcMy8=
 github.com/anacrolix/generics v0.0.0-20221204113337-c7a075d2582c h1:DAdz/y+ae9rffSFodsOrn9eYjQtBgW59my4CNLamF9I=
 github.com/anacrolix/generics v0.0.0-20221204113337-c7a075d2582c/go.mod h1:ff2rHB/joTV03aMSSn/AZNnaIpUw0h3njetGsaXcMy8=
 github.com/huandu/xstrings v1.3.2 h1:L18LIDzqlW6xN2rEkpdV8+oL/IXWJ1APd+vsdYy4Wdw=

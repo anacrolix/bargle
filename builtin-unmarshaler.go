@@ -9,7 +9,7 @@ import (
 )
 
 // Returns an unmarshaler for a builtin type. t must be a pointer to a type in the
-// builtinUnmarshalerType type set.
+// BuiltinUnmarshalerType type set.
 func BuiltinUnmarshalerFromAny(t any) Unmarshaler {
 	switch t := t.(type) {
 	case *string:
@@ -45,21 +45,23 @@ func BuiltinUnmarshalerFromAny(t any) Unmarshaler {
 	}
 }
 
-func BuiltinUnmarshaler[T builtinUnmarshalerType](t *T) Unmarshaler {
+// An unmarshaler for any of the types in the BuiltinUnmarshalerType type set.
+func BuiltinUnmarshaler[T BuiltinUnmarshalerType](t *T) Unmarshaler {
 	u := BuiltinUnmarshalerFromAny(t)
 	if u == nil {
-		// I expect this shouldn't happen as tne types are enforced by builtinUnmarshalerType. We
+		// I expect this shouldn't happen as tne types are enforced by BuiltinUnmarshalerType. We
 		// could include a better type error here.
 		panic("unreachable")
 	}
 	return u
 }
 
-type builtinUnmarshalerType interface {
+// A set of types supported by the builtin unmarshaler.
+type BuiltinUnmarshalerType interface {
 	string | *url.URL | int
 }
 
-type Builtin[T builtinUnmarshalerType] struct {
+type Builtin[T BuiltinUnmarshalerType] struct {
 	Value T
 }
 

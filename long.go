@@ -9,8 +9,8 @@ import (
 
 // An experiment with maybe allowing separators and key styling to be propagated from a config down
 // the track.
-func LongElems(u Unmarshaler, elems ...string) long {
-	return Long(strings.Join(elems, "-"), u)
+func LongElems(u Unmarshaler, firstElem string, elems ...string) long {
+	return Long(strings.Join(append(generics.Singleton(firstElem), elems...), "-"), u)
 }
 
 // Don't include the prefix "--" for now.

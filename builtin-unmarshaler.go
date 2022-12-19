@@ -58,7 +58,7 @@ func BuiltinUnmarshaler[T BuiltinUnmarshalerType](t *T) Unmarshaler {
 
 // A set of types supported by the builtin unmarshaler.
 type BuiltinUnmarshalerType interface {
-	string | *url.URL | int
+	string | *url.URL | int | net.IP | time.Duration | bool | int32
 }
 
 type Builtin[T BuiltinUnmarshalerType] struct {

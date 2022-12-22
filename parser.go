@@ -101,6 +101,8 @@ func (p *Parser) Err() error {
 	return p.err
 }
 
+// Applies the given arguments through the unmarshaller. Returns false if an error occurred. TODO:
+// This doesn't look completed.
 func (p *Parser) SetDefault(u Unmarshaler, args ...string) bool {
 	if p.err != nil {
 		return false

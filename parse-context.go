@@ -1,6 +1,7 @@
 package bargle
 
 type ParseContext interface {
+	NumArgs() int
 	Pop() (string, bool)
 	Unmarshal(Unmarshaler) bool
 	UnmarshalArg(u Unmarshaler, arg string) bool
@@ -9,6 +10,10 @@ type ParseContext interface {
 type parseContext struct {
 	args []string
 	err  error
+}
+
+func (me *parseContext) NumArgs() int {
+	return len(me.args)
 }
 
 func (me *parseContext) UnmarshalArg(u Unmarshaler, arg string) bool {

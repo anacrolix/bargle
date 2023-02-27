@@ -18,5 +18,8 @@ func (me positional) ArgInfo() ArgInfo {
 }
 
 func (me positional) Parse(ctx ParseContext) bool {
+	if ctx.NumArgs() < 1 {
+		return false
+	}
 	return ctx.Unmarshal(me.u)
 }

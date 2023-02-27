@@ -32,7 +32,11 @@ func (p *Parser) Parse(arg Arg) (matched bool) {
 	if p.err != nil {
 		return false
 	}
-	return p.parseInner(arg)
+	if !p.parseInner(arg) {
+		p.tryParseHelp()
+		return false
+	}
+	return true
 }
 
 // This parses without checking for existing Parser error or sending messages.
@@ -60,19 +64,31 @@ func (p *Parser) Fail() error {
 	return p.err
 }
 
+func (p *Parser) tryParseHelp() {
+	if p.err != nil {
+		return
+	}
+	if p.helper.Helping() {
+		return
+	}
+	p.parseInner(p.helper)
+}
+
+func (p *Parser) DoHelpIfHelping() {
+	if p.helper.Helping() {
+		p.helper.DoHelp()
+	}
+}
+
 // This asserts that no arguments remain, and if they do sets an appropriate error. You would call
 // this when you're ready to start actual work after parsing, and then check Parser.Ok().
 func (p *Parser) FailIfArgsRemain() {
 	if p.err != nil {
 		return
 	}
-	if !p.helper.Helping() {
-		p.parseInner(p.helper)
-	}
-	if p.helper.Helping() {
-		p.helper.DoHelp()
-		return
-	}
+	p.tryParseHelp()
+	// I don't think this should happen here anymore.
+	p.DoHelpIfHelping()
 	if len(p.args) != 0 {
 		p.err = fmt.Errorf("unused argument: %q", p.args[0])
 	}

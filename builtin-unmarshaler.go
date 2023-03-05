@@ -17,11 +17,11 @@ func BuiltinUnmarshalerFromAny(t any) Unmarshaler {
 	case *bool:
 		return boolUnmarshaler{t}
 	case **url.URL:
-		return UnmarshalFunc(t, url.Parse)
+		return UnaryUnmarshalFunc(t, url.Parse)
 	case *time.Duration:
-		return UnmarshalFunc(t, time.ParseDuration)
+		return UnaryUnmarshalFunc(t, time.ParseDuration)
 	case *net.IP:
-		return UnmarshalFunc(t, func(s string) (ip net.IP, err error) {
+		return UnaryUnmarshalFunc(t, func(s string) (ip net.IP, err error) {
 			ip = net.ParseIP(s)
 			if ip == nil {
 				err = fmt.Errorf("failed to parse IP from %q", s)

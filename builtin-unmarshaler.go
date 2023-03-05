@@ -52,6 +52,16 @@ func BuiltinUnmarshalerFromAny(t any) Unmarshaler {
 			f:    strconv.ParseUint,
 			bits: 0,
 		}
+	case *float64:
+		return floatUnmarshaler[float64]{
+			t:    t,
+			bits: 64,
+		}
+	case *float32:
+		return floatUnmarshaler[float32]{
+			t:    t,
+			bits: 32,
+		}
 	default:
 		return nil
 	}
@@ -70,7 +80,7 @@ func BuiltinUnmarshaler[T BuiltinUnmarshalerType](t *T) Unmarshaler {
 
 // A set of types supported by the builtin unmarshaler.
 type BuiltinUnmarshalerType interface {
-	string | *url.URL | int | net.IP | time.Duration | bool | int32 | uint32 | uint64
+	string | *url.URL | int | net.IP | time.Duration | bool | int32 | uint32 | uint64 | float64 | float32
 }
 
 type Builtin[T BuiltinUnmarshalerType] struct {

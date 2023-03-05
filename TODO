@@ -1,0 +1,4 @@
+- Error on positional arguments that look like switches before a positional-only flag is set on the parser.
+- Add helpers to bundle argument values and handlers together.
+- Add builtin support for Option values.
+- Add a helper for parsing a bundle of positional and switch handlers.

@@ -17,7 +17,7 @@ type builtinHelper struct {
 
 func (b *builtinHelper) initParser() {
 	b.initParserOnce.Do(func() {
-		b.parser = Long("help", BuiltinUnmarshalerFromAny(&b.helping))
+		b.parser = Long("help", BuiltinUnmarshaler(&b.helping))
 	})
 }
 

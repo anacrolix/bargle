@@ -18,21 +18,47 @@ type Parser struct {
 	args   []string
 	err    error
 	helper Helper
+
+	posOnly bool
+	// This is to prevent us adding the pseudo positional arg to help multiple times. It gets
+	// cleared when an argument matches, so we can add it again once for the next series of parse
+	// attempts.
+	triedParsingPosOnly bool
 }
 
 // Parse the given parameter, if we're in the right state. Returns true if it matched, and sets an
 // error if it matched and failed to unmarshal.
 func (p *Parser) Parse(arg Arg) (matched bool) {
-	defer func() {
-		p.helper.Parsed(ParseAttempt{
-			Arg:     arg,
-			Matched: matched,
-		})
-	}()
-	if p.err != nil {
+	if !p.posOnly {
+		if p.parseAndHelp(pseudoPosOnly{}, !p.triedParsingPosOnly) {
+			p.posOnly = true
+		}
+		p.triedParsingPosOnly = true
+	}
+	if p.posOnly && arg.ArgInfo().ArgType == ArgTypeSwitch {
 		return false
 	}
-	if !p.parseInner(arg) {
+	return p.parseAndHelp(arg, true)
+}
+
+// Parse the given parameter, if we're in the right state. Returns true if it matched, and sets an
+// error if it matched and failed to unmarshal.
+func (p *Parser) parseAndHelp(arg Arg, addToHelp bool) (matched bool) {
+	if addToHelp {
+		defer func() {
+			p.helper.Parsed(ParseAttempt{
+				Arg:     arg,
+				Matched: matched,
+			})
+			if matched {
+				p.triedParsingPosOnly = false
+			}
+		}()
+	}
+	if p.err != nil || p.helper.Helping() {
+		return false
+	}
+	if !p.doArgParse(arg) {
 		p.tryParseHelp()
 		return false
 	}
@@ -40,9 +66,10 @@ func (p *Parser) Parse(arg Arg) (matched bool) {
 }
 
 // This parses without checking for existing Parser error or sending messages.
-func (p *Parser) parseInner(arg Arg) (matched bool) {
+func (p *Parser) doArgParse(arg Arg) (matched bool) {
 	pc := parseContext{
-		args: p.args,
+		args:    p.args,
+		posOnly: p.posOnly,
 	}
 	parsed := arg.Parse(&pc)
 	if parsed {
@@ -71,7 +98,7 @@ func (p *Parser) tryParseHelp() {
 	if p.helper.Helping() {
 		return
 	}
-	p.parseInner(p.helper)
+	p.doArgParse(p.helper)
 }
 
 func (p *Parser) DoHelpIfHelping() {
@@ -83,7 +110,7 @@ func (p *Parser) DoHelpIfHelping() {
 // This asserts that no arguments remain, and if they do sets an appropriate error. You would call
 // this when you're ready to start actual work after parsing, and then check Parser.Ok().
 func (p *Parser) FailIfArgsRemain() {
-	if p.err != nil {
+	if p.err != nil || p.helper.Helping() {
 		return
 	}
 	p.tryParseHelp()
@@ -124,7 +151,8 @@ func (p *Parser) SetDefault(u Unmarshaler, args ...string) bool {
 		return false
 	}
 	pc := parseContext{
-		args: args,
+		args:    args,
+		posOnly: true,
 	}
 	return pc.Unmarshal(u)
 }

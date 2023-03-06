@@ -5,11 +5,24 @@ type ParseContext interface {
 	Pop() (string, bool)
 	Unmarshal(Unmarshaler) bool
 	UnmarshalArg(u Unmarshaler, arg string) bool
+	// Whether "--" has been given.
+	PositionalOnly() bool
+	PeekArgs() []string
 }
 
 type parseContext struct {
 	args []string
 	err  error
+	// "--" or something having the effect of not checking for switches has been set.
+	posOnly bool
+}
+
+func (me *parseContext) PeekArgs() []string {
+	return me.args
+}
+
+func (me *parseContext) PositionalOnly() bool {
+	return me.posOnly
 }
 
 func (me *parseContext) NumArgs() int {

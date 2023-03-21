@@ -4,26 +4,26 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/anacrolix/generics"
+	g "github.com/anacrolix/generics"
 	qt "github.com/frankban/quicktest"
 )
 
 type intMarshalCase struct {
 	arg string
-	i   generics.Option[int64]
+	i   g.Option[int64]
 }
 
 func goodCase(arg string, value int64) intMarshalCase {
-	return intMarshalCase{arg, generics.Some[int64](value)}
+	return intMarshalCase{arg, g.Some[int64](value)}
 }
 
 func badCase(arg string) intMarshalCase {
-	return intMarshalCase{arg, generics.None[int64]()}
+	return intMarshalCase{arg, g.None[int64]()}
 }
 
 var intMarshalCases = []struct {
 	arg string
-	i   generics.Option[int64]
+	i   g.Option[int64]
 }{
 	// Check the float parsing with the nudge toward zero.
 	goodCase("0e0", 0),

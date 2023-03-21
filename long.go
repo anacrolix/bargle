@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/anacrolix/generics"
+	g "github.com/anacrolix/generics"
 )
 
 // An experiment with maybe allowing separators and key styling to be propagated from a config down
 // the track.
 func LongElems(u Unmarshaler, firstElem string, elems ...string) long {
-	return Long(strings.Join(append(generics.Singleton(firstElem), elems...), "-"), u)
+	return Long(strings.Join(append(g.Singleton(firstElem), elems...), "-"), u)
 }
 
 // Don't include the prefix "--" for now.
@@ -25,7 +25,7 @@ type long struct {
 
 func (me long) ArgInfo() ArgInfo {
 	return ArgInfo{
-		MatchingForms: generics.Singleton(fmt.Sprintf("--%[1]s=value, --%[1]s value", me.key)),
+		MatchingForms: g.Singleton(fmt.Sprintf("--%[1]s=value, --%[1]s value", me.key)),
 		ArgType:       ArgTypeSwitch,
 	}
 }

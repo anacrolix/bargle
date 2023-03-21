@@ -1,6 +1,6 @@
 package bargle
 
-import "github.com/anacrolix/generics"
+import g "github.com/anacrolix/generics"
 
 func Keyword(arg string) keyword {
 	return keyword{arg}
@@ -13,7 +13,7 @@ type keyword struct {
 func (me keyword) ArgInfo() ArgInfo {
 	return ArgInfo{
 		ArgType:       ArgTypePos,
-		MatchingForms: generics.Singleton(me.arg),
+		MatchingForms: g.Singleton(me.arg),
 	}
 }
 

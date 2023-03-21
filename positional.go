@@ -1,9 +1,10 @@
 package bargle
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/anacrolix/generics"
+	g "github.com/anacrolix/generics"
 )
 
 func Positional(u Unmarshaler) positional {
@@ -17,7 +18,7 @@ type positional struct {
 func (me positional) ArgInfo() ArgInfo {
 	return ArgInfo{
 		ArgType:       ArgTypePos,
-		MatchingForms: generics.Singleton("<value>"),
+		MatchingForms: g.Singleton(fmt.Sprintf("%T", me.u)),
 	}
 }
 

@@ -1,8 +1,8 @@
 package bargle
 
-import "github.com/anacrolix/generics"
+import g "github.com/anacrolix/generics"
 
-func OptionUnmarshaler[V any](o *generics.Option[V], vu func(*V) Unmarshaler) Unmarshaler {
+func OptionUnmarshaler[V any](o *g.Option[V], vu func(*V) Unmarshaler) Unmarshaler {
 	u := vu(&o.Value)
 	return unmarshalFunc(func(ctx UnmarshalContext) error {
 		err := u.Unmarshal(ctx)
@@ -13,7 +13,7 @@ func OptionUnmarshaler[V any](o *generics.Option[V], vu func(*V) Unmarshaler) Un
 	})
 }
 
-func BuiltinOptionUnmarshaler[V BuiltinUnmarshalerType](o *generics.Option[V]) Unmarshaler {
+func BuiltinOptionUnmarshaler[V BuiltinUnmarshalerType](o *g.Option[V]) Unmarshaler {
 	return OptionUnmarshaler(o, func(v *V) Unmarshaler {
 		return BuiltinUnmarshaler(v)
 	})

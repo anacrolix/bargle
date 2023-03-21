@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/anacrolix/generics"
+	g "github.com/anacrolix/generics"
 )
 
 type builtinHelper struct {
@@ -27,7 +27,7 @@ func (b *builtinHelper) ArgInfo() ArgInfo {
 }
 
 func (b *builtinHelper) printArg(arg Arg) {
-	fmt.Println(generics.ConvertToSliceOfAny(arg.ArgInfo().MatchingForms)...)
+	fmt.Println(g.ConvertToSliceOfAny(arg.ArgInfo().MatchingForms)...)
 }
 
 func (b *builtinHelper) globalArgsSlice() (slice []Arg) {
@@ -69,7 +69,7 @@ func (b *builtinHelper) Parsed(attempt ParseAttempt) {
 		}
 		b.globalArgs[arg] = struct{}{}
 	} else {
-		generics.MakeMapIfNil(&b.unmatchedArgs)
+		g.MakeMapIfNil(&b.unmatchedArgs)
 		b.unmatchedArgs[argType] = append(b.unmatchedArgs[argType], arg)
 	}
 	if attempt.Matched {

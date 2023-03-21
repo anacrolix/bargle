@@ -81,13 +81,13 @@ func (p *Parser) doArgParse(arg Arg) (matched bool) {
 
 // Return existing Parser error, or set one based on how many arguments remain.
 func (p *Parser) Fail() error {
-	if p.err != nil {
-		return p.err
+	if p.err == nil {
+		if len(p.args) == 0 {
+			p.err = ErrExpectedArguments
+		} else {
+			p.FailIfArgsRemain()
+		}
 	}
-	if len(p.args) == 0 {
-		return ErrExpectedArguments
-	}
-	p.FailIfArgsRemain()
 	return p.err
 }
 

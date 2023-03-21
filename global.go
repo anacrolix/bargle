@@ -3,7 +3,12 @@ package bargle
 // Convenience function to parse a long using builtin unmarshaller. TODO: *Parser should be relaxed
 // to a Parser interface when it can be separated out.
 func ParseLongBuiltin[U BuiltinUnmarshalerType](p *Parser, value *U, elem string, elems ...string) bool {
-	return p.Parse(LongElems(BuiltinUnmarshaler(value), elem, elems...))
+	return p.Parse(NewBuiltinUnmarshalerLongElemsParser(value, elem, elems...))
+}
+
+// Returns a long-option parser for a builtin unmarshallable value.
+func NewBuiltinUnmarshalerLongElemsParser[U BuiltinUnmarshalerType](value *U, elem string, elems ...string) Arg {
+	return LongElems(BuiltinUnmarshaler(value), elem, elems...)
 }
 
 // Continues parsing preferring earlier arguments to later ones until nothing parses anymore.

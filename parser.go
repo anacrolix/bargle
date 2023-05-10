@@ -8,8 +8,10 @@ import (
 // Creates a new Parser bound to the system-level arguments.
 func NewParser() *Parser {
 	return &Parser{
-		args:   os.Args[1:],
-		helper: &builtinHelper{},
+		args: os.Args[1:],
+		helper: &builtinHelper{
+			writer: os.Stdout,
+		},
 	}
 }
 
@@ -161,4 +163,12 @@ func (p *Parser) SetError(err error) {
 	if p.err == nil {
 		p.err = err
 	}
+}
+
+func (p *Parser) SetArgs(args ...string) {
+	p.args = args
+}
+
+func (p *Parser) SetHelper(helper Helper) {
+	p.helper = helper
 }

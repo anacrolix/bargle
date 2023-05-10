@@ -2,6 +2,7 @@ package bargle
 
 import (
 	"fmt"
+	"io"
 	"sync"
 
 	g "github.com/anacrolix/generics"
@@ -13,6 +14,8 @@ type builtinHelper struct {
 	unmatchedArgs  map[ArgType][]Arg
 	parser         Arg
 	initParserOnce sync.Once
+	writer         io.Writer
+	helpedCount    int
 }
 
 func (b *builtinHelper) initParser() {
@@ -27,7 +30,7 @@ func (b *builtinHelper) ArgInfo() ArgInfo {
 }
 
 func (b *builtinHelper) printArg(arg Arg) {
-	fmt.Println(g.ConvertToSliceOfAny(arg.ArgInfo().MatchingForms)...)
+	fmt.Fprintln(b.writer, g.ConvertToSliceOfAny(arg.ArgInfo().MatchingForms)...)
 }
 
 func (b *builtinHelper) globalArgsSlice() (slice []Arg) {
@@ -37,21 +40,29 @@ func (b *builtinHelper) globalArgsSlice() (slice []Arg) {
 	return
 }
 
+const noArgumentsExpectedHelp = "No arguments expected.\n"
+
 func (b *builtinHelper) DoHelp() {
-	b.printArgBlock(ArgTypeEnvVar, "Environment variables:", b.globalArgsSlice())
-	b.printArgBlock(ArgTypeSwitch, "Switches:", b.unmatchedArgs[ArgTypeSwitch])
-	b.printArgBlock(ArgTypeSwitch, "Positional:", b.unmatchedArgs[ArgTypePos])
+	b.helpedCount++
+	printedSomething := false
+	printedSomething = b.printArgBlock(ArgTypeEnvVar, "Environment variables:", b.globalArgsSlice()) || printedSomething
+	printedSomething = b.printArgBlock(ArgTypeSwitch, "Switches:", b.unmatchedArgs[ArgTypeSwitch]) || printedSomething
+	printedSomething = b.printArgBlock(ArgTypeSwitch, "Positional:", b.unmatchedArgs[ArgTypePos]) || printedSomething
+	if !printedSomething {
+		fmt.Fprint(b.writer, noArgumentsExpectedHelp)
+	}
 }
 
-func (b *builtinHelper) printArgBlock(argType ArgType, header string, args []Arg) {
+func (b *builtinHelper) printArgBlock(argType ArgType, header string, args []Arg) bool {
 	if len(args) == 0 {
-		return
+		return false
 	}
-	fmt.Println(header)
+	fmt.Fprintln(b.writer, header)
 	for _, arg := range args {
-		fmt.Print("  ")
+		fmt.Fprint(b.writer, "  ")
 		b.printArg(arg)
 	}
+	return true
 }
 
 func (b *builtinHelper) Parse(ctx ParseContext) bool {

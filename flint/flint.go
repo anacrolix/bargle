@@ -102,3 +102,8 @@ func ParseStruct[T any](p *bargle.Parser, s *T) {
 	ps := processStruct(s, p)
 	ps.Run(p)
 }
+
+// Sets defaults for the type. Probably does other stuff but shouldn't.
+func SetDefaults[T any](s *T) {
+	ParseStruct(bargle.NewParserNoArgs(), s)
+}

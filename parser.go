@@ -15,6 +15,10 @@ func NewParser() *Parser {
 	}
 }
 
+func NewParserNoArgs() *Parser {
+	return &Parser{}
+}
+
 // A parser for a sequence of strings.
 type Parser struct {
 	args   []string
@@ -48,16 +52,18 @@ func (p *Parser) Parse(arg Arg) (matched bool) {
 func (p *Parser) parseAndHelp(arg Arg, addToHelp bool) (matched bool) {
 	if addToHelp {
 		defer func() {
-			p.helper.Parsed(ParseAttempt{
-				Arg:     arg,
-				Matched: matched,
-			})
+			if p.helper != nil {
+				p.helper.Parsed(ParseAttempt{
+					Arg:     arg,
+					Matched: matched,
+				})
+			}
 			if matched {
 				p.triedParsingPosOnly = false
 			}
 		}()
 	}
-	if p.err != nil || p.helper.Helping() {
+	if p.err != nil || p.helper == nil || p.helper.Helping() {
 		return false
 	}
 	if !p.doArgParse(arg) {
@@ -84,6 +90,9 @@ func (p *Parser) doArgParse(arg Arg) (matched bool) {
 // Return existing Parser error, or set one based on how many arguments remain.
 func (p *Parser) Fail() error {
 	if p.err == nil {
+		if p.tryDoHelp() {
+			return nil
+		}
 		if len(p.args) == 0 {
 			p.err = ErrExpectedArguments
 		} else {
@@ -107,6 +116,18 @@ func (p *Parser) DoHelpIfHelping() {
 	if p.helper.Helping() {
 		p.helper.DoHelp()
 	}
+}
+
+func (p *Parser) tryDoHelp() bool {
+	if p.err != nil || p.helper.Helping() {
+		return false
+	}
+	p.tryParseHelp()
+	if !p.helper.Helping() {
+		return false
+	}
+	p.helper.DoHelp()
+	return true
 }
 
 // This asserts that no arguments remain, and if they do sets an appropriate error. You would call

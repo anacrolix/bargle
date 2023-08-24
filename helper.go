@@ -5,6 +5,7 @@ type Helper interface {
 	Parsed(ParseAttempt)
 	Helping() bool
 	DoHelp()
+	SetHelping()
 }
 
 type ParseAttempt struct {

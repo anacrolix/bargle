@@ -63,7 +63,7 @@ func (p *Parser) parseAndHelp(arg Arg, addToHelp bool) (matched bool) {
 			}
 		}()
 	}
-	if p.err != nil || p.helper == nil || p.helper.Helping() {
+	if p.err != nil || p.helper == nil {
 		return false
 	}
 	if !p.doArgParse(arg) {
@@ -119,7 +119,7 @@ func (p *Parser) DoHelpIfHelping() {
 }
 
 func (p *Parser) tryDoHelp() bool {
-	if p.err != nil || p.helper.Helping() {
+	if p.err != nil {
 		return false
 	}
 	p.tryParseHelp()
@@ -133,12 +133,10 @@ func (p *Parser) tryDoHelp() bool {
 // This asserts that no arguments remain, and if they do sets an appropriate error. You would call
 // this when you're ready to start actual work after parsing, and then check Parser.Ok().
 func (p *Parser) FailIfArgsRemain() {
-	if p.err != nil || p.helper.Helping() {
+	if p.err != nil {
 		return
 	}
-	p.tryParseHelp()
-	// I don't think this should happen here anymore.
-	p.DoHelpIfHelping()
+	p.tryDoHelp()
 	if len(p.args) != 0 {
 		p.err = fmt.Errorf("unused argument: %q", p.args[0])
 	}
@@ -192,4 +190,8 @@ func (p *Parser) SetArgs(args ...string) {
 
 func (p *Parser) SetHelper(helper Helper) {
 	p.helper = helper
+}
+
+func (p *Parser) SetHelping() {
+	p.helper.SetHelping()
 }

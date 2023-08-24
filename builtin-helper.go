@@ -92,4 +92,8 @@ func (b *builtinHelper) Helping() bool {
 	return b.helping
 }
 
+func (b *builtinHelper) SetHelping() {
+	b.helping = true
+}
+
 var _ Helper = (*builtinHelper)(nil)

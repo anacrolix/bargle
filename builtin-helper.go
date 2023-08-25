@@ -3,6 +3,7 @@ package bargle
 import (
 	"fmt"
 	"io"
+	"os"
 	"sync"
 
 	g "github.com/anacrolix/generics"
@@ -45,6 +46,7 @@ const noArgumentsExpectedHelp = "No arguments expected.\n"
 func (b *builtinHelper) DoHelp() {
 	b.helpedCount++
 	printedSomething := false
+	fmt.Fprintf(b.writer, "Usage for %v:\n\n", os.Args[0])
 	printedSomething = b.printArgBlock(ArgTypeEnvVar, "Environment variables:", b.globalArgsSlice()) || printedSomething
 	printedSomething = b.printArgBlock(ArgTypeSwitch, "Switches:", b.unmatchedArgs[ArgTypeSwitch]) || printedSomething
 	printedSomething = b.printArgBlock(ArgTypeSwitch, "Positional:", b.unmatchedArgs[ArgTypePos]) || printedSomething

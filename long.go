@@ -24,8 +24,9 @@ type long struct {
 }
 
 func (me long) ArgInfo() ArgInfo {
+	argTypes := strings.Join(me.u.ArgTypes(), " ")
 	return ArgInfo{
-		MatchingForms: g.Singleton(fmt.Sprintf("--%[1]s=value, --%[1]s value", me.key)),
+		MatchingForms: g.Singleton(fmt.Sprintf("--%[1]s=%[2]v, --%[1]s %[2]v", me.key, argTypes)),
 		ArgType:       ArgTypeSwitch,
 	}
 }

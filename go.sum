@@ -1,5 +1,7 @@
 github.com/anacrolix/generics v0.0.0-20221204113337-c7a075d2582c h1:DAdz/y+ae9rffSFodsOrn9eYjQtBgW59my4CNLamF9I=
 github.com/anacrolix/generics v0.0.0-20221204113337-c7a075d2582c/go.mod h1:ff2rHB/joTV03aMSSn/AZNnaIpUw0h3njetGsaXcMy8=
+github.com/anacrolix/generics v0.0.0-20230816105729-c755655aee45 h1:Kmcl3I9K2+5AdnnR7hvrnVT0TLeFWWMa9bxnm55aVIg=
+github.com/anacrolix/generics v0.0.0-20230816105729-c755655aee45/go.mod h1:ff2rHB/joTV03aMSSn/AZNnaIpUw0h3njetGsaXcMy8=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/frankban/quicktest v1.14.4 h1:g2rn0vABPOOXmZUj+vbmUp0lPoXEMuhTpIluN0XL9UY=
 github.com/frankban/quicktest v1.14.4/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=

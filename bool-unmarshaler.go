@@ -6,6 +6,10 @@ type boolUnmarshaler struct {
 	b *bool
 }
 
+func (b boolUnmarshaler) ArgTypes() []string {
+	return []string{"?bool"}
+}
+
 // TODO: Bools/flags are special, this should probably not take an arg, and an extra interface exist
 // for inline values only.
 func (b boolUnmarshaler) Unmarshal(ctx UnmarshalContext) (err error) {

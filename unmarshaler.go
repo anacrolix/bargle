@@ -1,7 +1,12 @@
 package bargle
 
+import (
+	g "github.com/anacrolix/generics"
+)
+
 type Unmarshaler interface {
 	Unmarshal(ctx UnmarshalContext) error
+	ArgTypes() []string
 }
 
 func String(s *string) Unmarshaler {
@@ -10,6 +15,10 @@ func String(s *string) Unmarshaler {
 
 type stringUnmarshaler struct {
 	s *string
+}
+
+func (me stringUnmarshaler) ArgTypes() []string {
+	return g.Singleton("string")
 }
 
 func (me stringUnmarshaler) Unmarshal(ctx UnmarshalContext) (err error) {

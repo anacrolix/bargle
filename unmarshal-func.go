@@ -1,7 +1,14 @@
 package bargle
 
-type unmarshalFunc func(ctx UnmarshalContext) error
+type unmarshalFunc struct {
+	f        func(ctx UnmarshalContext) error
+	argTypes []string
+}
+
+func (me unmarshalFunc) ArgTypes() []string {
+	return me.argTypes
+}
 
 func (me unmarshalFunc) Unmarshal(ctx UnmarshalContext) error {
-	return me(ctx)
+	return me.f(ctx)
 }

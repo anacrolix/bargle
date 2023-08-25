@@ -32,6 +32,10 @@ func (b *builtinHelper) ArgInfo() ArgInfo {
 
 func (b *builtinHelper) printArg(arg Arg) {
 	fmt.Fprintln(b.writer, g.ConvertToSliceOfAny(arg.ArgInfo().MatchingForms)...)
+	descer, ok := arg.(ArgDescer)
+	if ok {
+		fmt.Fprintf(b.writer, "    %s\n", descer.ArgDesc())
+	}
 }
 
 func (b *builtinHelper) globalArgsSlice() (slice []Arg) {

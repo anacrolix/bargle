@@ -24,3 +24,7 @@ type ArgInfo struct {
 	// Environment variables for example.
 	Global bool
 }
+
+type ArgDescer interface {
+	ArgDesc() string
+}

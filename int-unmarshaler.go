@@ -2,6 +2,8 @@ package bargle
 
 import (
 	"errors"
+	"fmt"
+	g "github.com/anacrolix/generics"
 	"math"
 	"strconv"
 
@@ -16,6 +18,11 @@ type intUnmarshaler[T interface {
 	t    *T
 	f    func(string, int, int) (U, error)
 	bits int
+}
+
+func (me intUnmarshaler[T, U]) ArgTypes() []string {
+	var t T
+	return g.Singleton(fmt.Sprintf("%T", t))
 }
 
 func (me intUnmarshaler[T, U]) Unmarshal(ctx UnmarshalContext) error {

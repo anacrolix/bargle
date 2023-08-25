@@ -1,6 +1,8 @@
 package bargle
 
 import (
+	"fmt"
+	g "github.com/anacrolix/generics"
 	"strconv"
 
 	"golang.org/x/exp/constraints"
@@ -11,6 +13,11 @@ type floatUnmarshaler[T interface {
 }] struct {
 	t    *T
 	bits int
+}
+
+func (me floatUnmarshaler[T]) ArgTypes() []string {
+	var t T
+	return g.Singleton(fmt.Sprintf("%T", t))
 }
 
 func (me floatUnmarshaler[T]) Unmarshal(ctx UnmarshalContext) error {

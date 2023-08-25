@@ -90,9 +90,6 @@ func (p *Parser) doArgParse(arg Arg) (matched bool) {
 // Return existing Parser error, or set one based on how many arguments remain.
 func (p *Parser) Fail() error {
 	if p.err == nil {
-		if p.tryDoHelp() {
-			return nil
-		}
 		if len(p.args) == 0 {
 			p.err = ErrExpectedArguments
 		} else {
@@ -118,25 +115,12 @@ func (p *Parser) DoHelpIfHelping() {
 	}
 }
 
-func (p *Parser) tryDoHelp() bool {
-	if p.err != nil {
-		return false
-	}
-	p.tryParseHelp()
-	if !p.helper.Helping() {
-		return false
-	}
-	p.helper.DoHelp()
-	return true
-}
-
 // This asserts that no arguments remain, and if they do sets an appropriate error. You would call
 // this when you're ready to start actual work after parsing, and then check Parser.Ok().
 func (p *Parser) FailIfArgsRemain() {
 	if p.err != nil {
 		return
 	}
-	p.tryDoHelp()
 	if len(p.args) != 0 {
 		p.err = fmt.Errorf("unused argument: %q", p.args[0])
 	}

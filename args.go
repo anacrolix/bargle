@@ -28,3 +28,19 @@ type ArgInfo struct {
 type ArgDescer interface {
 	ArgDesc() string
 }
+
+type withDesc struct {
+	desc string
+	Arg
+}
+
+func (me withDesc) ArgDesc() string {
+	return me.desc
+}
+
+func WithDesc(desc string, arg Arg) interface {
+	Arg
+	ArgDescer
+} {
+	return withDesc{desc, arg}
+}

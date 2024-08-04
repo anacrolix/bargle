@@ -35,15 +35,6 @@ type Parser struct {
 // Parse the given parameter, if we're in the right state. Returns true if it matched, and sets an
 // error if it matched and failed to unmarshal.
 func (p *Parser) Parse(arg Arg) (matched bool) {
-	if !p.posOnly {
-		if p.parseAndHelp(pseudoPosOnly{}, !p.triedParsingPosOnly) {
-			p.posOnly = true
-		}
-		p.triedParsingPosOnly = true
-	}
-	if p.posOnly && arg.ArgInfo().ArgType == ArgTypeSwitch {
-		return false
-	}
 	return p.parseAndHelp(arg, true)
 }
 
@@ -63,18 +54,33 @@ func (p *Parser) parseAndHelp(arg Arg, addToHelp bool) (matched bool) {
 			}
 		}()
 	}
-	if p.err != nil || p.helper == nil {
+	if p.err != nil {
 		return false
 	}
-	if !p.doArgParse(arg) {
-		p.tryParseHelp()
-		return false
+	if !p.posOnly || arg.ArgInfo().ArgType != ArgTypeSwitch {
+		if p.doArgParse(arg) {
+			return true
+		}
 	}
-	return true
+	p.tryParseHelp()
+	return false
+}
+
+func (p *Parser) parsePseudoPosOnly() {
+	if !p.triedParsingPosOnly {
+		// This needs to be set before parsing because it recursively calls through to here again.
+		p.triedParsingPosOnly = true
+		if p.parseAndHelp(pseudoPosOnly{}, true) {
+			p.posOnly = true
+		}
+	}
 }
 
 // This parses without checking for existing Parser error or sending messages.
 func (p *Parser) doArgParse(arg Arg) (matched bool) {
+	// This is done here so that it's never missed, including when we're exclusively just checking
+	// if help is requested.
+	p.parsePseudoPosOnly()
 	pc := parseContext{
 		args:    p.args,
 		posOnly: p.posOnly,
@@ -103,15 +109,16 @@ func (p *Parser) tryParseHelp() {
 	if p.err != nil {
 		return
 	}
+	// Should we check for p.helper != nil here?
 	if p.helper.Helping() {
 		return
 	}
 	p.doArgParse(p.helper)
 }
 
-func (p *Parser) DoHelpIfHelping() {
+func (p *Parser) DoHelpIfHelping(opts PrintHelpOpts) {
 	if p.helper.Helping() {
-		p.helper.DoHelp()
+		p.helper.DoHelp(opts)
 	}
 }
 
@@ -121,6 +128,8 @@ func (p *Parser) FailIfArgsRemain() {
 	if p.err != nil {
 		return
 	}
+	// Check if help is wanted in case no argument parsing attempts have occurred yet.
+	p.tryParseHelp()
 	if len(p.args) != 0 {
 		p.err = fmt.Errorf("unused argument: %q", p.args[0])
 	}

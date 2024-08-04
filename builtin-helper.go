@@ -47,10 +47,18 @@ func (b *builtinHelper) globalArgsSlice() (slice []Arg) {
 
 const noArgumentsExpectedHelp = "No arguments expected.\n"
 
-func (b *builtinHelper) DoHelp() {
+type PrintHelpOpts struct {
+	// Don't print the usage string which includes the program basename. Helpful for testing or
+	// temporary binaries.
+	NoPrintUsage bool
+}
+
+func (b *builtinHelper) DoHelp(opts PrintHelpOpts) {
 	b.helpedCount++
 	printedSomething := false
-	fmt.Fprintf(b.writer, "Usage for %v:\n\n", os.Args[0])
+	if !opts.NoPrintUsage {
+		fmt.Fprintf(b.writer, "Usage for %v:\n\n", os.Args[0])
+	}
 	printedSomething = b.printArgBlock(ArgTypeEnvVar, "Environment variables:", b.globalArgsSlice()) || printedSomething
 	printedSomething = b.printArgBlock(ArgTypeSwitch, "Switches:", b.unmatchedArgs[ArgTypeSwitch]) || printedSomething
 	printedSomething = b.printArgBlock(ArgTypeSwitch, "Positional:", b.unmatchedArgs[ArgTypePos]) || printedSomething

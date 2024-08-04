@@ -4,7 +4,7 @@ type Helper interface {
 	Arg
 	Parsed(ParseAttempt)
 	Helping() bool
-	DoHelp()
+	DoHelp(PrintHelpOpts)
 	SetHelping()
 }
 

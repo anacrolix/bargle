@@ -70,7 +70,8 @@ func (p *Parser) parsePseudoPosOnly() {
 	if !p.triedParsingPosOnly {
 		// This needs to be set before parsing because it recursively calls through to here again.
 		p.triedParsingPosOnly = true
-		if p.parseAndHelp(pseudoPosOnly{}, true) {
+		// Currently disabling the -- in help.
+		if p.parseAndHelp(pseudoPosOnly{}, false) {
 			p.posOnly = true
 		}
 	}
@@ -116,7 +117,11 @@ func (p *Parser) tryParseHelp() {
 	p.doArgParse(p.helper)
 }
 
-func (p *Parser) DoHelpIfHelping(opts PrintHelpOpts) {
+func (p *Parser) DoHelpIfHelping() {
+	p.DoHelpIfHelpingOpts(PrintHelpOpts{})
+}
+
+func (p *Parser) DoHelpIfHelpingOpts(opts PrintHelpOpts) {
 	if p.helper.Helping() {
 		p.helper.DoHelp(opts)
 	}

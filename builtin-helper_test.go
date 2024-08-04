@@ -15,7 +15,7 @@ func TestHelpAfterPosOnly(t *testing.T) {
 	p.SetHelper(&helper)
 	var et string
 	ParseLongBuiltin(p, &et, "phone", "home")
-	p.DoHelpIfHelping(PrintHelpOpts{NoPrintUsage: true})
+	p.DoHelpIfHelpingOpts(PrintHelpOpts{NoPrintUsage: true})
 	c := qt.New(t)
 	c.Check(helper.helpedCount, qt.Equals, 1)
 }
@@ -27,7 +27,7 @@ func TestHelpAfterPosOnlyNoArgumentsExpected(t *testing.T) {
 	helper := builtinHelper{writer: &helpBuf}
 	p.SetHelper(&helper)
 	p.FailIfArgsRemain()
-	p.DoHelpIfHelping(PrintHelpOpts{NoPrintUsage: true})
+	p.DoHelpIfHelpingOpts(PrintHelpOpts{NoPrintUsage: true})
 	c := qt.New(t)
 	c.Check(helper.helpedCount, qt.Equals, 1)
 	c.Assert(helpBuf.String(), qt.Equals, noArgumentsExpectedHelp)
@@ -41,7 +41,7 @@ func TestSolitaryHelp(t *testing.T) {
 	p.SetHelper(&helper)
 	var et string
 	ParseLongBuiltin(p, &et, "phone", "home")
-	p.DoHelpIfHelping(PrintHelpOpts{})
+	p.DoHelpIfHelping()
 	c := qt.New(t)
 	c.Assert(helper.helpedCount, qt.Equals, 1)
 }

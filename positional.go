@@ -14,6 +14,8 @@ func Positional(metavar string, u Unmarshaler) Arg {
 type positional struct {
 	u       Unmarshaler
 	metavar string
+	// Maybe this should be done with a ParseCount wrapper type?
+	parsed bool
 }
 
 func (me positional) Metavar() string {
@@ -29,7 +31,10 @@ func (me *positional) ArgInfo() ArgInfo {
 	}
 }
 
-func (me positional) Parse(ctx ParseContext) bool {
+func (me *positional) Parse(ctx ParseContext) bool {
+	if me.parsed {
+		return false
+	}
 	if ctx.NumArgs() < 1 {
 		return false
 	}
@@ -38,5 +43,9 @@ func (me positional) Parse(ctx ParseContext) bool {
 	if !ctx.PositionalOnly() && strings.HasPrefix(ctx.PeekArgs()[0], "-") {
 		return false
 	}
-	return ctx.Unmarshal(me.u)
+	parsed := ctx.Unmarshal(me.u)
+	if parsed {
+		me.parsed = true
+	}
+	return parsed
 }

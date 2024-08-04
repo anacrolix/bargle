@@ -62,17 +62,25 @@ func (b *builtinHelper) DoHelp(opts PrintHelpOpts) {
 	if !opts.NoPrintUsage {
 		fmt.Fprintf(b.writer, "Usage for %v:\n\n", os.Args[0])
 	}
-	printedSomething = b.printArgBlock(ArgTypeEnvVar, "Environment variables:", b.globalArgsSlice()) || printedSomething
-	printedSomething = b.printArgBlock(ArgTypeSwitch, "Switches:", b.unmatchedArgs[ArgTypeSwitch]) || printedSomething
-	printedSomething = b.printArgBlock(ArgTypeSwitch, "Positional:", b.unmatchedArgs[ArgTypePos]) || printedSomething
+	printArgBlock := func(argType ArgType, header string, args []Arg) {
+		if b.printArgBlock(!printedSomething, argType, header, args) {
+			printedSomething = true
+		}
+	}
+	printArgBlock(ArgTypeEnvVar, "Environment variables:", b.globalArgsSlice())
+	printArgBlock(ArgTypePos, "Positional:", b.unmatchedArgs[ArgTypePos])
+	printArgBlock(ArgTypeSwitch, "Switches:", b.unmatchedArgs[ArgTypeSwitch])
 	if !printedSomething {
 		fmt.Fprint(b.writer, noArgumentsExpectedHelp)
 	}
 }
 
-func (b *builtinHelper) printArgBlock(argType ArgType, header string, args []Arg) bool {
+func (b *builtinHelper) printArgBlock(first bool, argType ArgType, header string, args []Arg) bool {
 	if len(args) == 0 {
 		return false
+	}
+	if !first {
+		fmt.Fprintln(b.writer)
 	}
 	fmt.Fprintln(b.writer, header)
 	for _, arg := range args {

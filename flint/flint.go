@@ -83,7 +83,7 @@ func processStruct(s any, p *bargle.Parser) (ret parsedStruct) {
 			if parts[0] == "positional" {
 				ret.pos = append(ret.pos, pos{
 					name:     name,
-					arg:      bargle.Positional(u),
+					arg:      bargle.Positional(name, u),
 					required: required,
 				})
 			}

@@ -31,6 +31,9 @@ func (b *builtinHelper) ArgInfo() ArgInfo {
 }
 
 func (b *builtinHelper) printArg(arg Arg) {
+	if mv, ok := arg.(Metavar); ok {
+		fmt.Fprintf(b.writer, "%s: ", mv.Metavar())
+	}
 	fmt.Fprintln(b.writer, g.ConvertToSliceOfAny(arg.ArgInfo().MatchingForms)...)
 	descer, ok := arg.(ArgDescer)
 	if ok {

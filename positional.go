@@ -4,15 +4,25 @@ import (
 	"strings"
 )
 
-func Positional(u Unmarshaler) positional {
-	return positional{u}
+// Creates a positional argument. Positional arguments are parsed based on their relative position
+// in the argument stream.
+func Positional(metavar string, u Unmarshaler) Arg {
+	// Yo... Rust is way better.
+	return &positional{u: u, metavar: metavar}
 }
 
 type positional struct {
-	u Unmarshaler
+	u       Unmarshaler
+	metavar string
 }
 
-func (me positional) ArgInfo() ArgInfo {
+func (me positional) Metavar() string {
+	return me.metavar
+}
+
+var _ Metavar = (*positional)(nil)
+
+func (me *positional) ArgInfo() ArgInfo {
 	return ArgInfo{
 		ArgType:       ArgTypePos,
 		MatchingForms: me.u.ArgTypes(),

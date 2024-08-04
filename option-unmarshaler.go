@@ -1,14 +1,11 @@
 package bargle
 
 import (
-	"fmt"
-
 	g "github.com/anacrolix/generics"
 )
 
 func OptionUnmarshaler[V any](o *g.Option[V], vu func(*V) Unmarshaler) Unmarshaler {
 	u := vu(&o.Value)
-	var v V
 	return unmarshalFunc{
 		func(ctx UnmarshalContext) error {
 			err := u.Unmarshal(ctx)
@@ -17,7 +14,7 @@ func OptionUnmarshaler[V any](o *g.Option[V], vu func(*V) Unmarshaler) Unmarshal
 			}
 			return err
 		},
-		g.Singleton(fmt.Sprintf("%T", v)),
+		u.ArgTypes(),
 	}
 }
 

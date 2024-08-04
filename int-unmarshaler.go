@@ -3,10 +3,10 @@ package bargle
 import (
 	"errors"
 	"fmt"
-	g "github.com/anacrolix/generics"
 	"math"
 	"strconv"
 
+	g "github.com/anacrolix/generics"
 	"golang.org/x/exp/constraints"
 )
 

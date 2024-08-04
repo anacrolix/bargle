@@ -2,9 +2,9 @@ package bargle
 
 import (
 	"fmt"
-	g "github.com/anacrolix/generics"
 	"strconv"
 
+	g "github.com/anacrolix/generics"
 	"golang.org/x/exp/constraints"
 )
 

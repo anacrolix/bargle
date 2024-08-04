@@ -1,9 +1,10 @@
 package bargle
 
 import (
-	qt "github.com/frankban/quicktest"
 	"strings"
 	"testing"
+
+	qt "github.com/frankban/quicktest"
 )
 
 func TestHelpAfterPosOnly(t *testing.T) {

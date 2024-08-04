@@ -1,4 +1,4 @@
-module github.com/anacrolix/bargle
+module github.com/anacrolix/bargle/v2
 
 go 1.19
 

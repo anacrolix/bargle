@@ -7,7 +7,7 @@ import (
 
 	"github.com/huandu/xstrings"
 
-	"github.com/anacrolix/bargle"
+	"github.com/anacrolix/bargle/v2"
 )
 
 type sub struct {

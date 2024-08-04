@@ -1,6 +1,7 @@
 package bargle
 
 import (
+	"encoding"
 	g "github.com/anacrolix/generics"
 )
 
@@ -24,4 +25,25 @@ func (me stringUnmarshaler) ArgTypes() []string {
 func (me stringUnmarshaler) Unmarshal(ctx UnmarshalContext) (err error) {
 	*me.s, err = ctx.Pop()
 	return err
+}
+
+func TextUnmarshaler(tu encoding.TextUnmarshaler) Unmarshaler {
+	return textUnmarshaler{tu}
+}
+
+type textUnmarshaler struct {
+	inner encoding.TextUnmarshaler
+}
+
+func (t textUnmarshaler) Unmarshal(ctx UnmarshalContext) (err error) {
+	s, err := ctx.Pop()
+	if err != nil {
+		return
+	}
+	err = t.inner.UnmarshalText([]byte(s))
+	return
+}
+
+func (t textUnmarshaler) ArgTypes() []string {
+	return []string{"string"}
 }

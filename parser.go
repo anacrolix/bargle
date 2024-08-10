@@ -16,6 +16,7 @@ func NewParser() *Parser {
 }
 
 func NewParserNoArgs() *Parser {
+	// TODO: Where helper?
 	return &Parser{}
 }
 
@@ -110,7 +111,9 @@ func (p *Parser) tryParseHelp() {
 	if p.err != nil {
 		return
 	}
-	// Should we check for p.helper != nil here?
+	if p.helper == nil {
+		return
+	}
 	if p.helper.Helping() {
 		return
 	}

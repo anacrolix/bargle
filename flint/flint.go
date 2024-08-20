@@ -12,7 +12,7 @@ import (
 
 type sub struct {
 	key          string
-	cmd          parsedStruct
+	cmd          StructParser
 	newStructPtr reflect.Value
 	setOnParse   reflect.Value
 }
@@ -23,13 +23,36 @@ type pos struct {
 	required bool
 }
 
-type parsedStruct struct {
+type StructParser struct {
 	options []bargle.Arg
 	pos     []pos
 	subs    []sub
 }
 
-func (ps parsedStruct) Run(p *bargle.Parser) {
+func (ps StructParser) ParseOne(p *bargle.Parser) bool {
+	for _, opt := range ps.options {
+		if p.Parse(opt) {
+			return true
+		}
+	}
+	for _, pos := range ps.pos {
+		if !p.Parse(pos.arg) && pos.required {
+			p.SetError(fmt.Errorf("%q required and not given", pos.name))
+			return false
+		}
+	}
+	for _, sub := range ps.subs {
+		if p.Parse(bargle.Keyword(sub.key)) {
+			sub.cmd.Run(p)
+			sub.setOnParse.Set(sub.newStructPtr)
+			return true
+		}
+	}
+	return false
+}
+
+func (ps StructParser) Run(p *bargle.Parser) {
+	// TODO: Make this use ParseOne if possible.
 opts:
 	for _, opt := range ps.options {
 		if p.Parse(opt) {
@@ -51,7 +74,7 @@ opts:
 	}
 }
 
-func processStruct(s any, p *bargle.Parser) (ret parsedStruct) {
+func NewStructParser(s any, p *bargle.Parser) (ret StructParser) {
 	v := reflect.ValueOf(s).Elem()
 	structType := v.Type()
 	for i := 0; i < v.NumField(); i++ {
@@ -64,7 +87,7 @@ func processStruct(s any, p *bargle.Parser) (ret parsedStruct) {
 				newStruct := reflect.New(fieldType.Elem())
 				ret.subs = append(ret.subs, sub{
 					key:          name,
-					cmd:          processStruct(newStruct.Interface(), p),
+					cmd:          NewStructParser(newStruct.Interface(), p),
 					setOnParse:   fieldValue,
 					newStructPtr: newStruct,
 				})
@@ -99,7 +122,7 @@ func processStruct(s any, p *bargle.Parser) (ret parsedStruct) {
 // Processes defaults and parses stuff in the struct per flint's implementation. I'm not sure how
 // you would mix positionals external to the struct with how this does it.
 func ParseStruct[T any](p *bargle.Parser, s *T) {
-	ps := processStruct(s, p)
+	ps := NewStructParser(s, p)
 	ps.Run(p)
 }
 

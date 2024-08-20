@@ -55,6 +55,11 @@ func (p *Parser) parseAndHelp(arg Arg, addToHelp bool) (matched bool) {
 			}
 		}()
 	}
+	defer func() {
+		if p.helping() && matched {
+			matched = false
+		}
+	}()
 	if p.err != nil {
 		return false
 	}
@@ -65,6 +70,10 @@ func (p *Parser) parseAndHelp(arg Arg, addToHelp bool) (matched bool) {
 	}
 	p.tryParseHelp()
 	return false
+}
+
+func (p *Parser) helping() bool {
+	return p.helper != nil && p.helper.Helping()
 }
 
 func (p *Parser) parsePseudoPosOnly() {

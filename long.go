@@ -23,6 +23,8 @@ type long struct {
 	u   Unmarshaler
 }
 
+var _ ArgValuer = long{}
+
 func (me long) ArgInfo() ArgInfo {
 	argTypes := strings.Join(me.u.ArgTypes(), " ")
 	return ArgInfo{
@@ -53,4 +55,8 @@ func (me long) Parse(ctx ParseContext) bool {
 		return ctx.Unmarshal(me.u)
 	}
 	return ctx.UnmarshalArg(me.u, arg[i+1:])
+}
+
+func (me long) Value() any {
+	return me.u.(UnmarshalerValuer).Value()
 }

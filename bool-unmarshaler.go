@@ -24,3 +24,7 @@ func (b boolUnmarshaler) Unmarshal(ctx UnmarshalContext) (err error) {
 	*b.b, err = strconv.ParseBool(arg)
 	return
 }
+
+func (b boolUnmarshaler) Value() any {
+	return *b.b
+}

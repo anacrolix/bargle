@@ -34,7 +34,11 @@ func (b *builtinHelper) printArg(arg Arg) {
 	if mv, ok := arg.(Metavar); ok {
 		fmt.Fprintf(b.writer, "%s: ", mv.Metavar())
 	}
-	fmt.Fprintln(b.writer, g.ConvertToSliceOfAny(arg.ArgInfo().MatchingForms)...)
+	fmt.Fprint(b.writer, g.ConvertToSliceOfAny(arg.ArgInfo().MatchingForms)...)
+	if av, ok := arg.(ArgValuer); ok {
+		fmt.Fprintf(b.writer, " [current value: %q]", av.Value())
+	}
+	fmt.Fprintln(b.writer)
 	descer, ok := arg.(ArgDescer)
 	if ok {
 		fmt.Fprintf(b.writer, "    %s\n", descer.ArgDesc())

@@ -2,6 +2,7 @@ package bargle
 
 import (
 	"fmt"
+	"net/url"
 
 	g "github.com/anacrolix/generics"
 )
@@ -12,6 +13,11 @@ func UnaryUnmarshalFunc[T any](t *T, f func(string) (T, error)) unaryUnmarshalFu
 		f: f,
 	}
 }
+
+var _ interface {
+	Unmarshaler
+	UnmarshalerValuer
+} = unaryUnmarshalFunc[*url.URL]{}
 
 type unaryUnmarshalFunc[T any] struct {
 	t *T
@@ -34,4 +40,8 @@ func (me unaryUnmarshalFunc[T]) Unmarshal(ctx UnmarshalContext) (err error) {
 	}
 	*me.t = t
 	return
+}
+
+func (me unaryUnmarshalFunc[T]) Value() any {
+	return *me.t
 }

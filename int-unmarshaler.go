@@ -80,3 +80,9 @@ func removeExponent(arg string) (ret string, err error) {
 	ret = strconv.FormatFloat(f64, 'f', -1, 64)
 	return
 }
+
+func (me intUnmarshaler[T, U]) Value() any {
+	return *me.t
+}
+
+var _ UnmarshalerValuer = intUnmarshaler[int, int64]{}

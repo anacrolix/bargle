@@ -5,6 +5,10 @@ type Arg interface {
 	ArgInfo() ArgInfo
 }
 
+type ArgValuer interface {
+	Value() any
+}
+
 type Input struct {
 	args []string
 }

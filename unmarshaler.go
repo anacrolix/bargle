@@ -10,12 +10,20 @@ type Unmarshaler interface {
 	ArgTypes() []string
 }
 
+type UnmarshalerValuer interface {
+	Value() any
+}
+
 func String(s *string) Unmarshaler {
 	return stringUnmarshaler{s}
 }
 
 type stringUnmarshaler struct {
 	s *string
+}
+
+func (me stringUnmarshaler) Value() any {
+	return *me.s
 }
 
 func (me stringUnmarshaler) ArgTypes() []string {

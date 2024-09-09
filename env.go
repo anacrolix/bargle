@@ -33,4 +33,11 @@ func (e env) Parse(ctx ParseContext) bool {
 	return ctx.UnmarshalArg(e.u, value)
 }
 
-var _ Arg = env{}
+func (e env) Value() any {
+	return e.u.(UnmarshalerValuer).Value()
+}
+
+var _ interface {
+	Arg
+	ArgValuer
+} = env{}

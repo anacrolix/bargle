@@ -39,6 +39,15 @@ func (p *Parser) Parse(arg Arg) (matched bool) {
 	return p.parseAndHelp(arg, true)
 }
 
+func (p *Parser) ParseAny(arg ...Arg) bool {
+	for _, arg := range arg {
+		if p.Parse(arg) {
+			return true
+		}
+	}
+	return false
+}
+
 // Parse the given parameter, if we're in the right state. Returns true if it matched, and sets an
 // error if it matched and failed to unmarshal.
 func (p *Parser) parseAndHelp(arg Arg, addToHelp bool) (matched bool) {

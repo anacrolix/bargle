@@ -31,7 +31,10 @@ func OptionFlag(key string, target *g.Option[bool]) flag {
 			target.Set(value)
 		},
 		value: func() any {
-			return *target
+			if !target.Ok {
+				return nil
+			}
+			return target.Value
 		},
 	}
 }

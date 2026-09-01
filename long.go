@@ -58,5 +58,5 @@ func (me long) Parse(ctx ParseContext) bool {
 }
 
 func (me long) Value() any {
-	return me.u.(UnmarshalerValuer).Value()
+	return unmarshalerValue(me.u)
 }

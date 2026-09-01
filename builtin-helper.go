@@ -31,12 +31,14 @@ func (b *builtinHelper) ArgInfo() ArgInfo {
 }
 
 func (b *builtinHelper) printArg(arg Arg) {
-	if mv, ok := arg.(Metavar); ok {
+	if mv, ok := UnwrapArgAs[Metavar](arg); ok {
 		fmt.Fprintf(b.writer, "%s: ", mv.Metavar())
 	}
 	fmt.Fprint(b.writer, g.ConvertToSliceOfAny(arg.ArgInfo().MatchingForms)...)
-	if av, ok := arg.(ArgValuer); ok {
-		fmt.Fprintf(b.writer, " [current value: %q]", av.Value())
+	if av, ok := UnwrapArgAs[ArgValuer](arg); ok {
+		if value := av.Value(); value != nil {
+			fmt.Fprintf(b.writer, " [current value: %s]", formatArgValue(value))
+		}
 	}
 	fmt.Fprintln(b.writer)
 	descer, ok := arg.(ArgDescer)
@@ -53,6 +55,15 @@ func (b *builtinHelper) globalArgsSlice() (slice []Arg) {
 }
 
 const noArgumentsExpectedHelp = "No arguments expected.\n"
+
+// Quoting is what makes an empty or space-padded string value legible, and what makes every other
+// kind of value less so: %q renders a bool as %!q(bool=false) and an int as a rune.
+func formatArgValue(value any) string {
+	if s, ok := value.(string); ok {
+		return fmt.Sprintf("%q", s)
+	}
+	return fmt.Sprintf("%v", value)
+}
 
 type PrintHelpOpts struct {
 	// Don't print the usage string which includes the program basename. Helpful for testing or

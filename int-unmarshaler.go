@@ -10,6 +10,18 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+// Returns an Unmarshaler for a signed integer of the given bit size. A bit size of 0 means the
+// size of the Go int type.
+func signedUnmarshaler[T constraints.Signed](t *T, bits int) Unmarshaler {
+	return intUnmarshaler[T, int64]{t: t, f: strconv.ParseInt, bits: bits}
+}
+
+// Returns an Unmarshaler for an unsigned integer of the given bit size. A bit size of 0 means the
+// size of the Go uint type.
+func unsignedUnmarshaler[T constraints.Unsigned](t *T, bits int) Unmarshaler {
+	return intUnmarshaler[T, uint64]{t: t, f: strconv.ParseUint, bits: bits}
+}
+
 type intUnmarshaler[T interface {
 	constraints.Integer
 }, U interface {

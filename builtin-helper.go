@@ -31,11 +31,11 @@ func (b *builtinHelper) ArgInfo() ArgInfo {
 }
 
 func (b *builtinHelper) printArg(arg Arg) {
-	if mv, ok := arg.(Metavar); ok {
+	if mv, ok := UnwrapArgAs[Metavar](arg); ok {
 		fmt.Fprintf(b.writer, "%s: ", mv.Metavar())
 	}
 	fmt.Fprint(b.writer, g.ConvertToSliceOfAny(arg.ArgInfo().MatchingForms)...)
-	if av, ok := arg.(ArgValuer); ok {
+	if av, ok := UnwrapArgAs[ArgValuer](arg); ok {
 		fmt.Fprintf(b.writer, " [current value: %q]", av.Value())
 	}
 	fmt.Fprintln(b.writer)

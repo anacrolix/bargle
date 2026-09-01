@@ -42,3 +42,27 @@ func TestBuiltinIntegerWidths(t *testing.T) {
 	c.Check(ui, qt.Equals, uint(16))
 	c.Check(parseBuiltinLong(t, &ui, "--value=-1"), qt.IsNotNil)
 }
+func TestWithArgTypes(t *testing.T) {
+	c := qt.New(t)
+	var value int64
+	u := WithArgTypes(BuiltinUnmarshaler(&value), "bytes")
+	c.Check(u.ArgTypes(), qt.DeepEquals, []string{"bytes"})
+	c.Check(Long("upload-rate", u).ArgInfo().MatchingForms, qt.DeepEquals,
+		[]string{"--upload-rate=bytes, --upload-rate bytes"})
+}
+
+func TestUnmarshalFunc(t *testing.T) {
+	c := qt.New(t)
+	var got string
+	u := UnmarshalFunc(func(ctx UnmarshalContext) (err error) {
+		got, err = ctx.Pop()
+		return
+	}, "thing")
+	p := NewParser()
+	p.SetArgs("--value", "hi")
+	ParseAll(p, Long("value", u))
+	p.FailIfArgsRemain()
+	c.Assert(p.Err(), qt.IsNil)
+	c.Check(got, qt.Equals, "hi")
+	c.Check(u.ArgTypes(), qt.DeepEquals, []string{"thing"})
+}

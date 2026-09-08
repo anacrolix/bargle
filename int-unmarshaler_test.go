@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	g "github.com/anacrolix/generics"
-	qt "github.com/frankban/quicktest"
+	"github.com/go-quicktest/qt"
 )
 
 type intMarshalCase struct {
@@ -41,25 +41,21 @@ var intMarshalCases = []struct {
 }
 
 func TestUnmarshalInt(t *testing.T) {
-	c := qt.New(t)
 	for _, _case := range intMarshalCases {
 		ui, err := unmarshalInt[int64, int64](_case.arg, strconv.ParseInt, 64)
 		if _case.i.Ok {
-			c.Assert(err, qt.IsNil)
-			c.Check(ui, qt.Equals, _case.i.Value)
+			qt.Assert(t, qt.IsNil(err))
+			qt.Check(t, qt.Equals(ui, _case.i.Value))
 		} else {
-			c.Assert(err, qt.IsNotNil)
+			qt.Assert(t, qt.IsNotNil(err))
 		}
 	}
 }
 
 func TestFloatFormatting(t *testing.T) {
-	c := qt.New(t)
-	c.Check(strconv.FormatFloat(10000, 'e', -1, 64), qt.Equals,
-		"1e+04")
+	qt.Check(t, qt.Equals(strconv.FormatFloat(10000, 'e', -1, 64), "1e+04"))
 	// This one exceeds precision, and still doesn't trigger exponent or decimal points despite 'f'.
-	c.Check(strconv.FormatFloat(-12345678901234567, 'f', -1, 64), qt.Equals,
-		"-12345678901234568")
+	qt.Check(t, qt.Equals(strconv.FormatFloat(-12345678901234567, 'f', -1, 64), "-12345678901234568"))
 }
 
 func FuzzIntUnmarshalling(f *testing.F) {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"strconv"
 	"time"
 )
 
@@ -29,29 +28,25 @@ func BuiltinUnmarshalerFromAny(t any) Unmarshaler {
 			return
 		})
 	case *int:
-		return intUnmarshaler[int, int64]{
-			t:    t,
-			f:    strconv.ParseInt,
-			bits: 0,
-		}
+		return signedUnmarshaler(t, 0)
+	case *int8:
+		return signedUnmarshaler(t, 8)
+	case *int16:
+		return signedUnmarshaler(t, 16)
 	case *int32:
-		return intUnmarshaler[int32, int64]{
-			t:    t,
-			f:    strconv.ParseInt,
-			bits: 0,
-		}
+		return signedUnmarshaler(t, 32)
+	case *int64:
+		return signedUnmarshaler(t, 64)
+	case *uint:
+		return unsignedUnmarshaler(t, 0)
+	case *uint8:
+		return unsignedUnmarshaler(t, 8)
+	case *uint16:
+		return unsignedUnmarshaler(t, 16)
 	case *uint32:
-		return intUnmarshaler[uint32, uint64]{
-			t:    t,
-			f:    strconv.ParseUint,
-			bits: 0,
-		}
+		return unsignedUnmarshaler(t, 32)
 	case *uint64:
-		return intUnmarshaler[uint64, uint64]{
-			t:    t,
-			f:    strconv.ParseUint,
-			bits: 0,
-		}
+		return unsignedUnmarshaler(t, 64)
 	case *float64:
 		return floatUnmarshaler[float64]{
 			t:    t,
@@ -80,7 +75,10 @@ func BuiltinUnmarshaler[T BuiltinUnmarshalerType](t *T) Unmarshaler {
 
 // A set of types supported by the builtin unmarshaler.
 type BuiltinUnmarshalerType interface {
-	string | *url.URL | int | net.IP | time.Duration | bool | int32 | uint32 | uint64 | float64 | float32
+	string | *url.URL | net.IP | time.Duration | bool |
+		int | int8 | int16 | int32 | int64 |
+		uint | uint8 | uint16 | uint32 | uint64 |
+		float64 | float32
 }
 
 type Builtin[T BuiltinUnmarshalerType] struct {

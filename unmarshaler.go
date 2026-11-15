@@ -14,6 +14,16 @@ type UnmarshalerValuer interface {
 	Value() any
 }
 
+// The current value of an Unmarshaler, or nil if it can't report one. Not every Unmarshaler tracks
+// a value it could show: an accumulating or wrapping one only knows how to consume arguments.
+func unmarshalerValue(u Unmarshaler) any {
+	valuer, ok := u.(UnmarshalerValuer)
+	if !ok {
+		return nil
+	}
+	return valuer.Value()
+}
+
 func String(s *string) Unmarshaler {
 	return stringUnmarshaler{s}
 }

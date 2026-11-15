@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/anacrolix/generics v0.0.0-20230816105729-c755655aee45
+	github.com/frankban/quicktest v1.14.4
 	github.com/go-quicktest/qt v1.102.0
 	github.com/huandu/xstrings v1.3.2
 	golang.org/x/exp v0.0.0-20220428152302-39d4317da171

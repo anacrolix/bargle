@@ -34,7 +34,7 @@ func (e env) Parse(ctx ParseContext) bool {
 }
 
 func (e env) Value() any {
-	return e.u.(UnmarshalerValuer).Value()
+	return unmarshalerValue(e.u)
 }
 
 var _ interface {

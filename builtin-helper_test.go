@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	qt "github.com/frankban/quicktest"
+	"github.com/go-quicktest/qt"
 )
 
 func TestHelpAfterPosOnly(t *testing.T) {
@@ -16,8 +16,7 @@ func TestHelpAfterPosOnly(t *testing.T) {
 	var et string
 	ParseLongBuiltin(p, &et, "phone", "home")
 	p.DoHelpIfHelpingOpts(PrintHelpOpts{NoPrintUsage: true})
-	c := qt.New(t)
-	c.Check(helper.helpedCount, qt.Equals, 1)
+	qt.Check(t, qt.Equals(helper.helpedCount, 1))
 }
 
 func TestHelpAfterPosOnlyNoArgumentsExpected(t *testing.T) {
@@ -28,9 +27,8 @@ func TestHelpAfterPosOnlyNoArgumentsExpected(t *testing.T) {
 	p.SetHelper(&helper)
 	p.FailIfArgsRemain()
 	p.DoHelpIfHelpingOpts(PrintHelpOpts{NoPrintUsage: true})
-	c := qt.New(t)
-	c.Check(helper.helpedCount, qt.Equals, 1)
-	c.Assert(helpBuf.String(), qt.Equals, noArgumentsExpectedHelp)
+	qt.Check(t, qt.Equals(helper.helpedCount, 1))
+	qt.Assert(t, qt.Equals(helpBuf.String(), noArgumentsExpectedHelp))
 }
 
 func TestSolitaryHelp(t *testing.T) {
@@ -42,6 +40,5 @@ func TestSolitaryHelp(t *testing.T) {
 	var et string
 	ParseLongBuiltin(p, &et, "phone", "home")
 	p.DoHelpIfHelping()
-	c := qt.New(t)
-	c.Assert(helper.helpedCount, qt.Equals, 1)
+	qt.Assert(t, qt.Equals(helper.helpedCount, 1))
 }
